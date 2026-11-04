@@ -38,6 +38,25 @@
     return `<svg viewBox="0 0 24 24">${ICONS[name]}</svg>`;
   }
 
+  /* 1:1 exact icon exports from Figma for the side icon rail (per the real design, not hand-drawn) */
+  const NAV_ICON_IMG = {
+    home: 'assets/icons/nav-home.png',
+    chat: 'assets/icons/nav-feed.png',
+    sparkle: 'assets/icons/nav-newwig.png',
+    rings: 'assets/icons/nav-bride.png',
+    people: 'assets/icons/nav-renewwig.png',
+    heart: 'assets/icons/nav-videos.png',
+    plus: 'assets/icons/nav-plus.png',
+    search: 'assets/icons/nav-search.png',
+    info: 'assets/icons/nav-about.png',
+    calendar: 'assets/icons/nav-contact.png',
+  };
+  function navIcon(name) {
+    const img = NAV_ICON_IMG[name];
+    if (!img) return svg(name);
+    return `<span class="nav-icon-img" style="-webkit-mask-image:url('${img}');mask-image:url('${img}')"></span>`;
+  }
+
   function rcHref(route) {
     return window.RC_SPA ? '#' + route : route + '.html';
   }
@@ -47,7 +66,7 @@
     if (!el) return;
     const current = document.body.dataset.page || '';
     el.innerHTML = NAV.map(
-      (n) => `<a href="${n.route ? rcHref(n.route) : '#'}" data-tooltip="${n.label}" aria-label="${n.label}" ${n.modal ? `data-open-modal="${n.modal}"` : ''} class="${!n.modal && n.route === current ? 'active' : ''}">${svg(n.icon)}</a>`
+      (n) => `<a href="${n.route ? rcHref(n.route) : '#'}" data-tooltip="${n.label}" aria-label="${n.label}" ${n.modal ? `data-open-modal="${n.modal}"` : ''} class="${!n.modal && n.route === current ? 'active' : ''}">${navIcon(n.icon)}</a>`
     ).join('');
   }
 
@@ -271,6 +290,63 @@
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('open'));
   }
+  /* ---------------- GSAP animated-typing headings + decorative accent ---------------- */
+  function initHeadingEffects() {
+    if (!window.gsap) return;
+    document.querySelectorAll('h1').forEach((h1) => {
+      if (h1.dataset.rcAnimated === '1') return;
+      h1.dataset.rcAnimated = '1';
+
+      const plainText = (h1.innerText || h1.textContent || '').replace(/\s+/g, ' ').trim();
+      h1.setAttribute('aria-label', plainText);
+
+      const wrapTextNodes = (node) => {
+        Array.from(node.childNodes).forEach((child) => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            const frag = document.createDocumentFragment();
+            child.textContent.split('').forEach((ch) => {
+              const span = document.createElement('span');
+              span.className = 'rc-char';
+              span.textContent = ch === ' ' ? ' ' : ch;
+              frag.appendChild(span);
+            });
+            node.replaceChild(frag, child);
+          } else if (child.nodeName !== 'BR') {
+            wrapTextNodes(child);
+          }
+        });
+      };
+      wrapTextNodes(h1);
+      h1.setAttribute('aria-hidden', 'false');
+      const chars = h1.querySelectorAll('.rc-char');
+
+      const accent = document.createElement('div');
+      accent.className = 'rc-heading-accent';
+      accent.innerHTML = `
+        <svg viewBox="0 0 140 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="rc-accent-grad" x1="0" y1="0" x2="140" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="var(--rose-1)"/>
+              <stop offset="1" stop-color="var(--rose-2)"/>
+            </linearGradient>
+          </defs>
+          <path class="rc-accent-path" d="M3 12c10-10 20-10 30 0s20 10 30 0 20-10 30 0 20 10 30 0" stroke="url(#rc-accent-grad)" stroke-width="3" stroke-linecap="round"/>
+        </svg>`;
+      h1.insertAdjacentElement('afterend', accent);
+      const path = accent.querySelector('.rc-accent-path');
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = String(len);
+      path.style.strokeDashoffset = String(len);
+
+      gsap.timeline()
+        .set(chars, { opacity: 0, y: 10 })
+        .set(accent, { opacity: 0 })
+        .to(chars, { opacity: 1, y: 0, duration: 0.025, stagger: 0.032, ease: 'none' })
+        .to(accent, { opacity: 1, duration: 0.25 }, '-=0.1')
+        .to(path, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, '<');
+    });
+  }
+
   window.RacheliModals = { open: openModal, close: closeAllModals };
   window.RacheliCommon = {
     mountRail, mountLogo, mountFooter, mountModals,
@@ -280,6 +356,7 @@
     isArticleSaved: isArticleSaved,
     toggleArticleSaved: toggleArticleSaved,
     initArticlesPage: initArticlesPage,
+    initHeadingEffects: initHeadingEffects,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -1070,5 +1147,6 @@
     mountStoryViewer();
     applyRingSegments();
     renderLikedVideosGrid();
+    initHeadingEffects();
   });
 })();
