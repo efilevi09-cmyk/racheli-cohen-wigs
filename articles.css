@@ -1,11 +1,13 @@
 /* ===== Articles page ===== */
-.articles-hero { padding: 64px 24px 28px; text-align: center; }
+.articles-hero { position: relative; padding: 64px 24px 28px; text-align: center; overflow: hidden; }
 .articles-hero h1 { font-size: clamp(28px, 4vw, 44px); }
+.articles-blob { top: -2px; left: 50%; transform: translateX(-50%); }
 
 .tabs-row {
-  display: flex; justify-content: center; gap: 6px;
+  position: relative;
+  display: flex; justify-content: center; align-items: center; gap: 6px;
   border-bottom: 1px solid var(--line);
-  padding: 0 16px 0;
+  padding: 0 52px;
   flex-wrap: wrap;
   margin-bottom: 30px;
 }
@@ -15,14 +17,20 @@
 }
 .tabs-row button.active { color: var(--rose-2); border-bottom-color: var(--rose-1); font-weight: 600; }
 .tabs-row__icon-btn {
-  margin-inline-start: auto;
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 32px; height: 32px; border-radius: 50%;
-  display: grid; place-items: center; align-self: center;
+  display: grid; place-items: center;
   color: var(--gray-text);
   transition: background .15s ease, color .15s ease;
 }
 .tabs-row__icon-btn svg { width: 18px; height: 18px; }
 .tabs-row__icon-btn:hover { background: var(--pink-pale); color: var(--rose-2); }
+@media (max-width: 560px) {
+  .tabs-row { padding: 0 44px; }
+}
 
 .articles-grid {
   display: grid;

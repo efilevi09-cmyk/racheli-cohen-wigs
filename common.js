@@ -19,18 +19,20 @@
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>',
     bookmark: '<path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/>',
     photo: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/><path d="m4.5 16.5 4.5-4.5a1.8 1.8 0 0 1 2.5 0l1.6 1.6M14 13.8l1.1-1.1a1.8 1.8 0 0 1 2.5 0l1.9 1.9"/>',
+    grid: '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/>',
   };
 
+  /* סדר תפריט הניווט הראשי — לפי המבנה המעודכן */
   const NAV = [
-    { icon: 'home', route: 'home', label: 'בית' },
-    { icon: 'chat', route: 'feed', label: 'פיד' },
+    { icon: 'home', route: 'home', label: 'דף בית' },
+    { icon: 'info', route: 'about', label: 'אודות' },
     { icon: 'sparkle', route: 'new-wig', label: 'פאה חדשה' },
     { icon: 'rings', route: 'bride', label: 'כלה' },
     { icon: 'people', route: 'renew-wig', label: 'חידוש פאה' },
-    { icon: 'heart', route: 'videos', label: 'סרטונים שאהבתי' },
-    { icon: 'plus', route: null, label: 'תהליך חדש', modal: 'journey' },
-    { icon: 'search', route: 'articles', label: 'חיפוש / מאמרים' },
-    { icon: 'info', route: 'about', label: 'אודות' },
+    { icon: 'chat', route: 'feed', label: 'פיד' },
+    { icon: 'grid', route: 'articles', label: 'עולם תוכן' },
+    { icon: 'search', route: null, label: 'חיפוש', modal: 'search' },
+    { icon: 'heart', route: 'videos', label: 'תוכן שאהבתי' },
     { icon: 'calendar', route: 'contact', label: 'קביעת פגישה' },
   ];
 
@@ -46,10 +48,10 @@
     rings: 'assets/icons/nav-bride.png',
     people: 'assets/icons/nav-renewwig.png',
     heart: 'assets/icons/nav-videos.png',
-    plus: 'assets/icons/nav-plus.png',
     search: 'assets/icons/nav-search.png',
     info: 'assets/icons/nav-about.png',
     calendar: 'assets/icons/nav-contact.png',
+    /* 'grid' (עולם תוכן) has no exact Figma export — falls back to the matching line-icon from ICONS */
   };
   function navIcon(name) {
     const img = NAV_ICON_IMG[name];
@@ -153,6 +155,19 @@
         </p>
       </div>
     </div>
+    <div class="modal-overlay" id="modal-search">
+      <div class="modal-card modal-card--search">
+        <button class="modal-close" data-close-modal>&times;</button>
+        <h3>מה תרצי לחפש?</h3>
+        <div class="search-field">
+          ${svg('search')}
+          <input type="text" id="site-search-input" placeholder="חיפוש מאמרים, טיפים, השראה..." autocomplete="off">
+        </div>
+        <div class="search-quicklinks" id="search-quicklinks"></div>
+        <div class="search-results" id="search-results"></div>
+      </div>
+    </div>
+
     <div class="rc-toast" id="rc-toast"></div>`;
   }
 
@@ -171,7 +186,18 @@
       if (e.target.matches('[data-close-modal]') || e.target.classList.contains('modal-overlay')) {
         closeAllModals();
       }
+      if (e.target.closest('.search-quicklink, .search-result')) {
+        closeAllModals();
+      }
     });
+
+    const searchInput = document.getElementById('site-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => renderSearchResults(searchInput.value.trim()));
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAllModals();
+      });
+    }
 
     const form = document.getElementById('appointment-form');
     if (form) {
@@ -286,9 +312,61 @@
   function openModal(id) {
     const el = document.getElementById('modal-' + id);
     if (el) el.classList.add('open');
+    if (id === 'search') {
+      renderSearchQuicklinks();
+      renderSearchResults('');
+      const input = document.getElementById('site-search-input');
+      if (input) { input.value = ''; setTimeout(() => input.focus(), 50); }
+    }
   }
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('open'));
+  }
+
+  /* ---------------- site-wide quick search (modal) ---------------- */
+  function renderSearchQuicklinks() {
+    const holder = document.getElementById('search-quicklinks');
+    if (!holder) return;
+    const links = NAV.filter((n) => n.route);
+    holder.innerHTML = links.map((n) => `
+      <a class="search-quicklink" href="${rcHref(n.route)}">
+        <span class="search-quicklink-ic">${navIcon(n.icon)}</span>
+        <span>${n.label}</span>
+      </a>`).join('');
+  }
+
+  function renderSearchResults(query) {
+    const holder = document.getElementById('search-results');
+    const quick = document.getElementById('search-quicklinks');
+    if (!holder) return;
+    const q = (query || '').trim();
+    if (!q) {
+      holder.innerHTML = '';
+      holder.hidden = true;
+      if (quick) quick.hidden = false;
+      return;
+    }
+    if (quick) quick.hidden = true;
+    holder.hidden = false;
+    const list = typeof ARTICLES !== 'undefined' ? ARTICLES : [];
+    const norm = q.toLowerCase();
+    const matches = list.filter((a) =>
+      a.title.toLowerCase().includes(norm) ||
+      a.excerpt.toLowerCase().includes(norm) ||
+      a.tag.toLowerCase().includes(norm)
+    );
+    if (!matches.length) {
+      holder.innerHTML = `<p class="search-empty">לא נמצאו תוצאות עבור "${q}".</p>`;
+      return;
+    }
+    holder.innerHTML = matches.map((a) => `
+      <a class="search-result" href="${rcHref('articles')}" data-open-article="${a.id}">
+        <img src="${a.img}" alt="">
+        <span class="search-result-body">
+          <strong>${a.title}</strong>
+          <small>${a.tag} · ${a.excerpt}</small>
+        </span>
+      </a>`).join('');
   }
   /* ---------------- GSAP animated-typing headings + decorative accent ---------------- */
   function initHeadingEffects() {
@@ -867,20 +945,22 @@
     const items = [];
     TOPICS.forEach((topic) => {
       topic.slides.forEach((slide, sIdx) => {
-        if (slide.type === 'video' && liked.has(slideKey(topic, sIdx))) {
+        if (liked.has(slideKey(topic, sIdx))) {
           items.push({ topic, sIdx, slide });
         }
       });
     });
     if (!items.length) {
-      grid.innerHTML = '<p class="videos-empty">עדיין לא סימנת סרטונים שאהבת. פתחי סטורי ולחצי על "אהבתי" כדי לשמור אותו כאן.</p>';
+      grid.innerHTML = '<p class="videos-empty">עדיין לא סימנת תוכן שאהבת. פתחי סטורי ולחצי על "אהבתי" כדי לשמור אותו כאן.</p>';
       return;
     }
     grid.innerHTML = items.map((it) => `
-      <div class="video-card" data-topic="${it.topic.id}" data-slide="${it.sIdx}" role="button" tabindex="0" aria-label="צפייה בסרטון">
-        <video src="${slideDisplaySrc(it.slide)}" muted playsinline preload="metadata"></video>
+      <div class="video-card" data-topic="${it.topic.id}" data-slide="${it.sIdx}" role="button" tabindex="0" aria-label="צפייה בתוכן">
+        ${it.slide.type === 'video'
+          ? `<video src="${slideDisplaySrc(it.slide)}" muted playsinline preload="metadata"></video>`
+          : `<img src="${slideDisplaySrc(it.slide)}" alt="${it.slide.caption || ''}" loading="lazy">`}
         <span class="liked-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg></span>
-        <span class="play-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,.25)"/><path d="M10 8.5 16 12l-6 3.5v-7Z"/></svg></span>
+        ${it.slide.type === 'video' ? `<span class="play-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,.25)"/><path d="M10 8.5 16 12l-6 3.5v-7Z"/></svg></span>` : ''}
       </div>`).join('');
     grid.querySelectorAll('.video-card').forEach((card) => {
       const open = () => openStoryViewer(card.dataset.topic, parseInt(card.dataset.slide, 10));

@@ -7,13 +7,8 @@
 }
 .contact-hero h1 { font-size: clamp(34px, 5vw, 52px); text-transform: uppercase; }
 .contact-blob {
-  position: absolute;
-  top: 0; left: 50%;
+  top: -6px; left: 50%;
   transform: translateX(-50%);
-  width: 150px; height: 170px;
-  background: var(--pink-pale);
-  border-radius: 62% 38% 55% 45% / 48% 42% 58% 52%;
-  z-index: -1;
 }
 
 .contact-wrap {
