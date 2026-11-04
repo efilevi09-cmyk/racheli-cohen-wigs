@@ -17,6 +17,8 @@
     share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/>',
     close: '<path d="M6 6l12 12M18 6 6 18"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>',
+    bookmark: '<path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/>',
+    photo: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/><path d="m4.5 16.5 4.5-4.5a1.8 1.8 0 0 1 2.5 0l1.6 1.6M14 13.8l1.1-1.1a1.8 1.8 0 0 1 2.5 0l1.9 1.9"/>',
   };
 
   const NAV = [
@@ -275,6 +277,9 @@
     showToast, copyText, rcHref,
     applyRingSegments: function () { applyRingSegments(); },
     renderLikedVideosGrid: function () { renderLikedVideosGrid(); },
+    isArticleSaved: isArticleSaved,
+    toggleArticleSaved: toggleArticleSaved,
+    initArticlesPage: initArticlesPage,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -593,6 +598,103 @@
     renderLikedVideosGrid();
   }
   function slideKey(topic, idx) { return topic.id + ':' + idx; }
+
+  /* ---------------- saved / bookmarked articles ---------------- */
+  function savedArticlesSet() {
+    try { return new Set(JSON.parse(localStorage.getItem('rc-saved-articles') || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveSavedArticles(set) {
+    try { localStorage.setItem('rc-saved-articles', JSON.stringify([...set])); } catch (e) {}
+  }
+  function isArticleSaved(id) { return savedArticlesSet().has(id); }
+  function toggleArticleSaved(id) {
+    const set = savedArticlesSet();
+    const nowSaved = !set.has(id);
+    if (nowSaved) set.add(id); else set.delete(id);
+    saveSavedArticles(set);
+    return nowSaved;
+  }
+
+  const ARTICLES = [
+    { id: 'mistakes-first-wig', tag: 'טיפים', img: 'assets/articles_card_00.jpg', title: '3 טעויות נפוצות בבחירת הפאה הראשונה', excerpt: 'דברים קטנים שעושים הבדל גדול בתוצאה', likes: 128 },
+    { id: 'first-meeting-guide', tag: 'כלות', img: 'assets/articles_card_01.jpg', title: 'המדריך המלא לפגישה הראשונה', excerpt: 'כך להגיע מוכנה, בטוחה ורגועה', likes: 19 },
+    { id: 'perfect-match', tag: 'לפני ואחרי', img: 'assets/articles_card_02.jpg', title: 'התאמה מושלמת עושה את כל ההבדל', excerpt: 'סיפור של שיער, ביטחון ותחושת שלמות', likes: 142 },
+    { id: 'timeless-styles', tag: 'השראה', img: 'assets/articles_card_10.jpg', title: 'סגנונות אהובים שלא יוצאים מהאופנה', excerpt: 'גלי השראה לגראות יומיומית ומיוחדת', likes: 67 },
+    { id: 'gentle-look-story', tag: 'סיפורים', img: 'assets/articles_card_11.jpg', title: 'היא רצתה מראה עדין וקיבלה את עצמה מחדש', excerpt: 'סיפור כלה שמרגש אותנו בכל פעם מחדש', likes: 94 },
+    { id: 'keep-wig-fresh', tag: 'טיפים', img: 'assets/articles_card_12.jpg', title: 'איך לשמור על הפאה שלך נראית חדשה לאורך זמן', excerpt: '7 טיפים פשוטים לשגרת טיפול נכונה', likes: 83 },
+  ];
+
+  function renderArticlesGrid(filter) {
+    const grid = document.getElementById('articles-grid');
+    if (!grid) return;
+    const list = !filter || filter === 'all' || filter === 'my-feed' ? ARTICLES : ARTICLES.filter((a) => a.tag === filter);
+    if (!list.length) {
+      grid.innerHTML = '<p class="articles-empty">לא נמצאו תכנים בקטגוריה הזו כרגע.</p>';
+      return;
+    }
+    grid.innerHTML = list.map((a) => {
+      const saved = isArticleSaved(a.id);
+      return `
+        <article class="article-card" data-id="${a.id}">
+          <a class="article-media" href="#" data-open-article="${a.id}">
+            <img src="${a.img}" alt="${a.title}" loading="lazy">
+            <span class="article-type-badge">${svg('photo')}</span>
+            <span class="article-tag">${a.tag}</span>
+          </a>
+          <div class="article-body">
+            <h3 class="article-title">${a.title}</h3>
+            <p class="article-excerpt">${a.excerpt}</p>
+          </div>
+          <div class="meta">
+            <span class="article-likes">${svg('heart')}${a.likes}</span>
+            <span class="icons">
+              <button type="button" class="article-save${saved ? ' saved' : ''}" data-save="${a.id}" aria-label="שמירת מאמר" aria-pressed="${saved}"><svg viewBox="0 0 24 24" fill="${saved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8">${ICONS.bookmark}</svg></button>
+              <button type="button" class="article-share" data-share="${a.id}" aria-label="שיתוף מאמר">${svg('share')}</button>
+            </span>
+          </div>
+        </article>`;
+    }).join('');
+
+    grid.querySelectorAll('[data-save]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-save');
+        const nowSaved = toggleArticleSaved(id);
+        btn.classList.toggle('saved', nowSaved);
+        btn.setAttribute('aria-pressed', nowSaved);
+        btn.querySelector('svg').setAttribute('fill', nowSaved ? 'currentColor' : 'none');
+        showToast(nowSaved ? 'נשמר למועדפים' : 'הוסר מהמועדפים');
+      });
+    });
+    grid.querySelectorAll('[data-share]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-share');
+        const article = ARTICLES.find((a) => a.id === id);
+        const url = location.href.split('#')[0] + '#article-' + id;
+        const shareData = { title: 'רחלי כהן | ' + article.title, text: article.excerpt, url };
+        try {
+          if (navigator.share) { await navigator.share(shareData); return; }
+          throw new Error('no-share');
+        } catch (e) {
+          try { await navigator.clipboard.writeText(url); showToast('הקישור הועתק!'); }
+          catch (e2) { showToast(url); }
+        }
+      });
+    });
+    grid.querySelectorAll('[data-open-article]').forEach((a) => a.addEventListener('click', (e) => e.preventDefault()));
+  }
+
+  function initArticlesPage() {
+    const tabs = document.querySelectorAll('.tabs-row button[data-filter]');
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        tabs.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderArticlesGrid(btn.getAttribute('data-filter'));
+      });
+    });
+    renderArticlesGrid('my-feed');
+  }
 
   /* ---------------- התחברות עם גוגל - נדרש כדי לסמן "אהבתי" על סטטוס ----------------
      יש להחליף את הערך הבא במזהה לקוח (Client ID) אמיתי שנוצר ב-Google Cloud Console

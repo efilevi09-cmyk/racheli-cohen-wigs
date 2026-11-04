@@ -37,44 +37,19 @@
         </section>
 
         <nav class="tabs-row" aria-label="סינון תכנים">
-          <button class="active">הפיד שלי</button>
-          <button>כל התכנים</button>
-          <button>טיפים</button>
-          <button>השראה</button>
-          <button>כלות</button>
-          <button>סיפורים</button>
-          <button>לפני ואחרי</button>
+          <button class="active" data-filter="my-feed">הפיד שלי</button>
+          <button data-filter="all">כל התכנים</button>
+          <button data-filter="טיפים">טיפים</button>
+          <button data-filter="השראה">השראה</button>
+          <button data-filter="כלות">כלות</button>
+          <button data-filter="סיפורים">סיפורים</button>
+          <button data-filter="לפני ואחרי">לפני ואחרי</button>
+          <button class="tabs-row__icon-btn" type="button" aria-label="סינון מתקדם">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          </button>
         </nav>
 
-        <section class="articles-grid">
-          <article class="article-card">
-            <img src="assets/articles_card_00.jpg" alt="3 טעויות נפוצות בבחירת הפאה הראשונה">
-            <div class="meta">
-              <span>128 ❤</span>
-              <span class="icons">🔖 ↗</span>
-            </div>
-          </article>
-          <article class="article-card">
-            <img src="assets/articles_card_01.jpg" alt="המדריך המלא לפגישה הראשונה">
-            <div class="meta"><span>19 ❤</span><span class="icons">🔖 ↗</span></div>
-          </article>
-          <article class="article-card">
-            <img src="assets/articles_card_02.jpg" alt="התאמה מושלמת עושה את כל ההבדל">
-            <div class="meta"><span>142 ❤</span><span class="icons">🔖 ↗</span></div>
-          </article>
-          <article class="article-card">
-            <img src="assets/articles_card_10.jpg" alt="סגנונות אהובים שלא יוצאים מהאופנה">
-            <div class="meta"><span>67 ❤</span><span class="icons">🔖 ↗</span></div>
-          </article>
-          <article class="article-card">
-            <img src="assets/articles_card_11.jpg" alt="היא רצתה מראה עדין וקיבלה את עצמה מחדש">
-            <div class="meta"><span>94 ❤</span><span class="icons">🔖 ↗</span></div>
-          </article>
-          <article class="article-card">
-            <img src="assets/articles_card_12.jpg" alt="איך לשמור על הפאה שלך נראית חדשה לאורך זמן">
-            <div class="meta"><span>83 ❤</span><span class="icons">🔖 ↗</span></div>
-          </article>
-        </section>
+        <section class="articles-grid" id="articles-grid"></section>
       </main>
 
       <footer id="site-footer" class="site-footer"></footer>
@@ -83,12 +58,7 @@
 
   <script src="common.js"></script>
   <script>
-    document.querySelectorAll('.tabs-row button').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        document.querySelectorAll('.tabs-row button').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
+    window.RacheliCommon.initArticlesPage();
   </script>
 </body>
 </html>
