@@ -38,6 +38,51 @@
 }
 .modal-photo img { width: 100%; }
 
+/* ================= התחברות עם גוגל ("אהבתי") ================= */
+.rc-google-modal {
+  position: fixed; inset: 0;
+  background: rgba(20, 14, 12, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  z-index: 300;
+  animation: rc-google-fade .2s ease;
+}
+@keyframes rc-google-fade { from { opacity: 0; } to { opacity: 1; } }
+.rc-google-card {
+  position: relative;
+  width: min(420px, 100%);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 44px 30px 34px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  transform: translateY(10px) scale(.98);
+  animation: rc-google-pop .25s ease forwards;
+}
+@keyframes rc-google-pop { to { transform: translateY(0) scale(1); } }
+.rc-google-close {
+  position: absolute; top: 14px; left: 14px;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--pink-pale);
+  color: var(--rose-2);
+}
+.rc-google-close svg { width: 16px; height: 16px; stroke: currentColor; }
+.rc-google-icon {
+  width: 52px; height: 52px; margin: 0 auto 16px;
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--gradient); color: var(--white);
+}
+.rc-google-icon svg { width: 24px; height: 24px; stroke: currentColor; fill: none; }
+.rc-google-card h3 {
+  font-size: 19px; margin-bottom: 8px;
+}
+.rc-google-card p {
+  font-size: 13.5px; color: var(--gray-text); line-height: 1.6; margin-bottom: 22px;
+}
+.rc-google-btn-mount { display: flex; justify-content: center; min-height: 40px; }
+.rc-google-note { font-size: 13px; color: var(--gray-text); }
+
 .modal-card h3 {
   font-size: 24px;
   margin-bottom: 6px;

@@ -16,6 +16,7 @@
     chevronR: '<path d="m9 18 6-6-6-6"/>',
     share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/>',
     close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>',
   };
 
   const NAV = [
@@ -24,10 +25,10 @@
     { icon: 'sparkle', route: 'new-wig', label: 'פאה חדשה' },
     { icon: 'rings', route: 'bride', label: 'כלה' },
     { icon: 'people', route: 'renew-wig', label: 'חידוש פאה' },
-    { icon: 'play', route: 'videos', label: 'סרטונים שאהבתי' },
+    { icon: 'heart', route: 'videos', label: 'סרטונים שאהבתי' },
     { icon: 'plus', route: null, label: 'תהליך חדש', modal: 'journey' },
     { icon: 'search', route: 'articles', label: 'חיפוש / מאמרים' },
-    { icon: 'heart', route: 'about', label: 'אודות' },
+    { icon: 'info', route: 'about', label: 'אודות' },
     { icon: 'calendar', route: 'contact', label: 'קביעת פגישה' },
   ];
 
@@ -272,6 +273,8 @@
   window.RacheliCommon = {
     mountRail, mountLogo, mountFooter, mountModals,
     showToast, copyText, rcHref,
+    applyRingSegments: function () { applyRingSegments(); },
+    renderLikedVideosGrid: function () { renderLikedVideosGrid(); },
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -510,6 +513,8 @@
             if (list && list.length) {
               TOPICS = list;
               igRefreshIfOpen();
+              applyRingSegments();
+              renderLikedVideosGrid();
             }
           });
           return;
@@ -526,6 +531,18 @@
       }
     } catch (e) {}
     TOPICS = DEFAULT_TOPICS;
+  }
+
+  function applyRingSegments() {
+    document.querySelectorAll('.topic[data-topic]').forEach(function (el) {
+      const topicId = el.getAttribute('data-topic');
+      const topic = TOPICS.find(function (t) { return t.id === topicId; });
+      const ring = el.querySelector('.topic-ring');
+      if (!ring) return;
+      const count = (topic && topic.slides && topic.slides.length) ? topic.slides.length : 1;
+      ring.style.setProperty('--seg-count', count);
+      ring.classList.toggle('has-segments', count > 1);
+    });
   }
 
   function igRefreshIfOpen() {
@@ -573,8 +590,125 @@
   }
   function saveLiked(set) {
     try { localStorage.setItem('rc-liked-stories', JSON.stringify([...set])); } catch (e) {}
+    renderLikedVideosGrid();
   }
   function slideKey(topic, idx) { return topic.id + ':' + idx; }
+
+  /* ---------------- התחברות עם גוגל - נדרש כדי לסמן "אהבתי" על סטטוס ----------------
+     יש להחליף את הערך הבא במזהה לקוח (Client ID) אמיתי שנוצר ב-Google Cloud Console
+     (OAuth consent screen > Credentials > Create Credentials > OAuth client ID > Web application),
+     ולהוסיף את כתובת האתר החי (למשל https://racheli-cohen-wigs-site.pages.dev) ב-Authorized JavaScript origins. */
+  const RC_GOOGLE_CLIENT_ID = '';
+  let rcGoogleScriptLoading = false;
+
+  function rcGoogleUser() {
+    try { return JSON.parse(localStorage.getItem('rc-google-user') || 'null'); }
+    catch (e) { return null; }
+  }
+  function rcSaveGoogleUser(profile) {
+    try { localStorage.setItem('rc-google-user', JSON.stringify(profile)); } catch (e) {}
+  }
+  function rcDecodeGoogleJwt(token) {
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+      return JSON.parse(json);
+    } catch (e) { return null; }
+  }
+  function rcLoadGoogleScript(cb) {
+    if (window.google && window.google.accounts && window.google.accounts.id) { cb(); return; }
+    if (rcGoogleScriptLoading) {
+      const wait = setInterval(() => {
+        if (window.google && window.google.accounts && window.google.accounts.id) { clearInterval(wait); cb(); }
+      }, 150);
+      return;
+    }
+    rcGoogleScriptLoading = true;
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+  function rcCloseGoogleModal() {
+    const m = document.getElementById('rc-google-modal');
+    if (m) m.remove();
+  }
+  function rcShowGoogleSignInModal(onSuccess) {
+    rcCloseGoogleModal();
+    const wrap = document.createElement('div');
+    wrap.id = 'rc-google-modal';
+    wrap.className = 'rc-google-modal';
+    wrap.innerHTML = `
+      <div class="rc-google-card">
+        <button class="rc-google-close" aria-label="סגירה">${svg('close')}</button>
+        <div class="rc-google-icon">${svg('heart')}</div>
+        <h3>רק רגע לפני שמסמנים "אהבתי"</h3>
+        <p>כדי לשמור את הסרטונים שאהבת ולראות אותם בעמוד "סרטונים שאהבתי", יש להתחבר עם חשבון גוגל.</p>
+        <div id="rc-google-btn" class="rc-google-btn-mount"></div>
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.querySelector('.rc-google-close').addEventListener('click', rcCloseGoogleModal);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) rcCloseGoogleModal(); });
+
+    if (!RC_GOOGLE_CLIENT_ID) {
+      const mount = document.getElementById('rc-google-btn');
+      if (mount) mount.innerHTML = '<p class="rc-google-note">ההתחברות עם גוגל עדיין לא הוגדרה באתר - בקרוב.</p>';
+      return;
+    }
+    rcLoadGoogleScript(() => {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: RC_GOOGLE_CLIENT_ID,
+          callback: (resp) => {
+            const payload = rcDecodeGoogleJwt(resp.credential);
+            if (payload) {
+              rcSaveGoogleUser({ sub: payload.sub, name: payload.name, email: payload.email, picture: payload.picture });
+            }
+            rcCloseGoogleModal();
+            onSuccess();
+          },
+        });
+        window.google.accounts.id.renderButton(document.getElementById('rc-google-btn'), {
+          theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', locale: 'he',
+        });
+      } catch (e) {}
+    });
+  }
+  function rcEnsureGoogleSignedIn(onReady) {
+    if (rcGoogleUser() || !RC_GOOGLE_CLIENT_ID) { onReady(); return; }
+    rcShowGoogleSignInModal(onReady);
+  }
+
+  function renderLikedVideosGrid() {
+    const grid = document.getElementById('videos-grid');
+    if (!grid) return;
+    const liked = likedSet();
+    const items = [];
+    TOPICS.forEach((topic) => {
+      topic.slides.forEach((slide, sIdx) => {
+        if (slide.type === 'video' && liked.has(slideKey(topic, sIdx))) {
+          items.push({ topic, sIdx, slide });
+        }
+      });
+    });
+    if (!items.length) {
+      grid.innerHTML = '<p class="videos-empty">עדיין לא סימנת סרטונים שאהבת. פתחי סטורי ולחצי על "אהבתי" כדי לשמור אותו כאן.</p>';
+      return;
+    }
+    grid.innerHTML = items.map((it) => `
+      <div class="video-card" data-topic="${it.topic.id}" data-slide="${it.sIdx}" role="button" tabindex="0" aria-label="צפייה בסרטון">
+        <video src="${slideDisplaySrc(it.slide)}" muted playsinline preload="metadata"></video>
+        <span class="liked-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg></span>
+        <span class="play-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,.25)"/><path d="M10 8.5 16 12l-6 3.5v-7Z"/></svg></span>
+      </div>`).join('');
+    grid.querySelectorAll('.video-card').forEach((card) => {
+      const open = () => openStoryViewer(card.dataset.topic, parseInt(card.dataset.slide, 10));
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
+  }
 
   function currentTopic() { return TOPICS[igTopicIndex]; }
   function currentSlide() { return currentTopic().slides[igSlideIndex]; }
@@ -711,12 +845,12 @@
     igScheduleNext();
   }
 
-  function openStoryViewer(topicId) {
+  function openStoryViewer(topicId, slideIndex) {
     const el = document.getElementById('igstory-overlay');
     if (!el) return;
     const startIndex = Math.max(0, TOPICS.findIndex((t) => t.id === topicId));
     igTopicIndex = startIndex;
-    igSlideIndex = 0;
+    igSlideIndex = (typeof slideIndex === 'number' && slideIndex >= 0 && slideIndex < currentTopic().slides.length) ? slideIndex : 0;
     el.classList.add('open');
     document.body.style.overflow = 'hidden';
     igRender();
@@ -758,11 +892,21 @@
 
     document.getElementById('igstory-like').addEventListener('click', () => {
       const topic = currentTopic();
-      const set = likedSet();
       const key = slideKey(topic, igSlideIndex);
-      if (set.has(key)) set.delete(key); else set.add(key);
-      saveLiked(set);
-      igRender();
+      const alreadyLiked = likedSet().has(key);
+      if (alreadyLiked) {
+        const set = likedSet();
+        set.delete(key);
+        saveLiked(set);
+        igRender();
+        return;
+      }
+      rcEnsureGoogleSignedIn(() => {
+        const set = likedSet();
+        set.add(key);
+        saveLiked(set);
+        igRender();
+      });
     });
 
     document.getElementById('igstory-share').addEventListener('click', async () => {
@@ -822,5 +966,7 @@
     mountModals();
     await loadTopics();
     mountStoryViewer();
+    applyRingSegments();
+    renderLikedVideosGrid();
   });
 })();
