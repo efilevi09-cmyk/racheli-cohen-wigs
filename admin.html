@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ניהול תוכן סטוריז | רחלי כהן</title>
+  <meta name="description" content="פאנל ניהול תוכן - הוספה ועריכה של סטוריז לאתר">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modals.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body data-page="admin">
+  <div class="promo-bar">פאנל ניהול תוכן - לעיניי רחלי בלבד</div>
+
+  <div class="admin-wrap">
+    <header class="admin-head">
+      <div class="admin-head-title">
+        <div class="logo-mark" style="width:38px;height:38px;border-radius:50%;background:var(--gradient);color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;">RC</div>
+        <div>
+          <h1>ניהול תוכן הסטוריז</h1>
+          <p>כאן אפשר להוסיף, לערוך ולמחוק את הסטוריז שמופיעים בעיגולים שבראש האתר</p>
+        </div>
+      </div>
+      <div class="admin-head-actions">
+        <a class="btn-ghost" href="home.html" target="_blank" rel="noopener">צפייה באתר</a>
+        <button class="btn-ghost" id="admin-reset" type="button">איפוס לברירת מחדל</button>
+      </div>
+    </header>
+
+    <div class="admin-note">
+      <strong>לתשומת לבך:</strong> התוכן שנשמר כאן נשמר בדפדפן הזה בלבד (אחסון מקומי במחשב/בדפדפן שבו את עורכת).
+      זה מצוין לעריכה ולבדיקה עצמית, אבל כדי שהתוכן יוצג <u>לכל המבקרים באתר</u> מכל מכשיר, צריך לחבר את האתר למסד נתונים אמיתי בענן -
+      אני יכולה לעזור להקים את זה כשתרצי.
+    </div>
+
+    <div class="admin-topics" id="admin-topics">
+      <p class="admin-loading">טוען תוכן…</p>
+    </div>
+
+    <div class="admin-save-bar">
+      <span id="admin-save-status">כל השינויים נשמרים אוטומטית</span>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

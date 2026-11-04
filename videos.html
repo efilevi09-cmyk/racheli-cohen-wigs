@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>סרטונים שאהבת | רחלי כהן</title>
+  <meta name="description" content="כל הסרטונים ששמרת ואהבת, במקום אחד.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modals.css">
+  <link rel="stylesheet" href="videos.css">
+</head>
+<body data-page="videos">
+  <div class="promo-bar">עולם של תוכן – לגלות, ללמוד ולשמור</div>
+
+  <div class="body-row">
+    <aside class="side-col">
+      <div id="site-logo" class="logo"></div>
+      <nav id="icon-rail" class="icon-rail" aria-label="ניווט ראשי"></nav>
+    </aside>
+
+    <div class="content">
+      <main>
+        <section class="topics-row" style="padding-top:26px">
+          <div class="topic" data-topic="tipuach" role="button" tabindex="0" aria-label="צפייה בסטורי טיפוח"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_tipuach.jpg" alt="טיפוח" loading="lazy"></div></div><span>טיפוח</span></div>
+          <div class="topic" data-topic="mivne" role="button" tabindex="0" aria-label="צפייה בסטורי מבנה"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_mivne.jpg" alt="מבנה" loading="lazy"></div></div><span>מבנה</span></div>
+          <div class="topic" data-topic="tzeva" role="button" tabindex="0" aria-label="צפייה בסטורי צבע"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_tzeva.jpg" alt="צבע" loading="lazy"></div></div><span>צבע</span></div>
+          <div class="topic" data-topic="leaz" role="button" tabindex="0" aria-label="צפייה בסטורי לייס"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_leaz.jpg" alt="לייס" loading="lazy"></div></div><span>לייס</span></div>
+          <div class="topic" data-topic="topim" role="button" tabindex="0" aria-label="צפייה בסטורי טופים"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_topim.jpg" alt="טופים" loading="lazy"></div></div><span>טופים</span></div>
+          <div class="topic" data-topic="tnua" role="button" tabindex="0" aria-label="צפייה בסטורי תנועה"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_tnua.jpg" alt="תנועה" loading="lazy"></div></div><span>תנועה</span></div>
+          <div class="topic" data-topic="misgeret" role="button" tabindex="0" aria-label="צפייה בסטורי מסגרת"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_misgeret.jpg" alt="מסגרת" loading="lazy"></div></div><span>מסגרת</span></div>
+          <div class="topic" data-topic="orech" role="button" tabindex="0" aria-label="צפייה בסטורי אורך"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_orech.jpg" alt="אורך" loading="lazy"></div></div><span>אורך</span></div>
+          <div class="topic" data-topic="tivaiyot" role="button" tabindex="0" aria-label="צפייה בסטורי טבעיות"><div class="topic-ring"><div class="topic-ring-in"><img src="assets/home_topic_tivaiyot.jpg" alt="טבעיות" loading="lazy"></div></div><span>טבעיות</span></div>
+        </section>
+
+        <header class="videos-header">
+          <div class="heart-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg>
+          </div>
+          <h1>סרטונים שאהבת</h1>
+        </header>
+
+        <div class="videos-grid" id="videos-grid"></div>
+
+        <div class="side-cta">
+          <a href="#" data-open-modal="appointment">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="writing-mode:horizontal-tb"><path d="m9 18 6-6-6-6"/></svg>
+            קבעי פגישה
+          </a>
+        </div>
+      </main>
+
+      <footer id="site-footer" class="site-footer"></footer>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    (function () {
+      var imgs = ['assets/journey_center.jpg', 'assets/journey_side.jpg', 'assets/home_hero.jpg'];
+      var grid = document.getElementById('videos-grid');
+      var html = '';
+      for (var i = 0; i < 9; i++) {
+        html += '<div class="video-card">' +
+          '<img src="' + imgs[i % imgs.length] + '" alt="סרטון שמור">' +
+          '<span class="liked-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg></span>' +
+          '<span class="play-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,.25)"/><path d="M10 8.5 16 12l-6 3.5v-7Z"/></svg></span>' +
+          '</div>';
+      }
+      grid.innerHTML = html;
+    })();
+  </script>
+</body>
+</html>

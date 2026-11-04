@@ -1,0 +1,336 @@
+/* ================= Modals ================= */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(20, 14, 12, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  z-index: 200;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+.modal-card {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--pink-pale);
+  border-radius: var(--radius-lg);
+  padding: 50px 32px 38px;
+  text-align: center;
+  transform: translateY(16px) scale(.98);
+  transition: transform .25s ease;
+}
+.modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+
+.modal-card.tone-peach { background: #f8e6de; }
+
+.modal-close {
+  position: absolute; top: 16px; left: 16px;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,.7);
+  font-size: 18px;
+}
+.modal-photo {
+  width: 230px; margin: 0 auto 14px;
+}
+.modal-photo img { width: 100%; }
+
+.modal-card h3 {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+.modal-card p.sub { color: var(--gray-text); font-size: 14px; margin-bottom: 18px; }
+
+.journey-options { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+
+.field-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.field {
+  flex: 1 1 180px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  padding: 15px 18px;
+}
+.field input {
+  width: 100%; border: none; outline: none; background: transparent;
+  font-family: var(--font-ui); font-size: 15px; text-align: center; color: var(--black);
+}
+.field input::placeholder { color: rgba(0,0,0,.35); }
+
+.consent-row {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 12px; color: var(--black); margin: 10px 0 20px;
+}
+
+.modal-card .btn-primary { width: 100%; }
+.modal-card .btn-secondary {
+  display: block; width: 100%;
+  background: var(--white); border-radius: var(--radius-md);
+  padding: 14px; margin-top: 10px; font-weight: 600; box-shadow: var(--shadow-soft);
+}
+
+.thanks-meta { font-size: 14px; color: var(--black); margin-bottom: 20px; line-height: 1.6; }
+.thanks-body { font-size: 14px; color: var(--black); line-height: 1.8; margin-top: 22px; }
+.thanks-body strong { display: block; margin-top: 10px; font-family: var(--font-display); font-weight: 700; }
+
+/* ================= Story carousel (journey pages) ================= */
+.story-wrap { position: relative; padding: 70px 16px 90px; overflow: hidden; }
+.story-headline { text-align: center; font-size: clamp(22px, 3vw, 30px); margin-bottom: 34px; max-width: 700px; margin-inline: auto; }
+
+.story-track {
+  display: flex; align-items: center; justify-content: center; gap: 22px;
+  position: relative;
+}
+.story-card {
+  flex: 0 0 auto;
+  width: 230px; border-radius: 25px; overflow: hidden; position: relative;
+  box-shadow: var(--shadow-card);
+  opacity: .45; transform: scale(.82);
+  transition: all .35s ease;
+  background: #000;
+}
+.story-card.active { width: 330px; opacity: 1; transform: scale(1); }
+.story-card img { width: 100%; height: 330px; object-fit: cover; display: block; }
+.story-card.active img { height: 460px; }
+.story-caption {
+  text-align: center; font-size: 16px; margin-top: 18px; max-width: 320px; margin-inline: auto; min-height: 48px;
+}
+.story-stats {
+  position: absolute; right: 14px; bottom: 14px; display: flex; flex-direction: column; gap: 6px;
+  color: var(--white); font-size: 11px;
+}
+.story-stats span { display: flex; align-items: center; gap: 5px; }
+.story-stats svg { width: 13px; height: 13px; }
+.story-play {
+  position: absolute; inset: 0; display: grid; place-items: center;
+}
+.story-play svg { width: 44px; height: 44px; fill: rgba(255,255,255,.85); }
+.story-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; border-radius: 50%; background: var(--white);
+  box-shadow: var(--shadow-card); display: grid; place-items: center; z-index: 5;
+}
+.story-nav.prev { right: 4%; }
+.story-nav.next { left: 4%; }
+.story-nav svg { width: 18px; height: 18px; }
+.story-progress { width: min(1100px,92%); height: 6px; background: #fff5ee; border-radius: 99px; margin: 40px auto 0; overflow: hidden; }
+.story-progress-bar { height: 100%; background: var(--gradient); border-radius: 99px; transition: width .3s ease; }
+
+.side-cta {
+  position: fixed; top: 50%; left: var(--rail-w, 0px);
+  transform: translateY(-50%);
+  z-index: 30;
+}
+.side-cta a {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--gradient);
+  color: var(--white); font-weight: 700; font-size: 15px;
+  padding: 16px 20px; border-radius: 16px 0 0 16px;
+  box-shadow: var(--shadow-card);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+@media (max-width: 860px) {
+  .story-card { width: 160px; }
+  .story-card img { height: 230px; }
+  .story-card.active { width: 230px; }
+  .story-card.active img { height: 330px; }
+  .side-cta { position: static; transform: none; display: flex; justify-content: center; margin: 24px 0; }
+  .side-cta a { writing-mode: horizontal-tb; border-radius: var(--radius-pill); }
+}
+
+/* ========================================================================
+   Instagram-style Story Viewer (triggered from the topic circles)
+   ======================================================================== */
+.igstory-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: #000;
+  display: none;
+  align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .25s ease;
+}
+.igstory-overlay.open { display: flex; opacity: 1; }
+
+.igstory-stage {
+  position: relative;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+.igstory-head {
+  position: absolute; top: 28px; left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 6;
+}
+.igstory-logo { display: flex; align-items: center; gap: 8px; }
+.igstory-logo .logo-mark {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid var(--white); color: var(--white);
+  display: grid; place-items: center; font-family: var(--font-display); font-size: 11px; font-weight: 700;
+}
+.igstory-logo span { color: var(--white); font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: .5px; }
+.igstory-close {
+  width: 36px; height: 36px; border-radius: 50%;
+  color: var(--white); line-height: 1;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,.08);
+}
+.igstory-close:hover { background: rgba(255,255,255,.18); }
+.igstory-close svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+.igstory-progress {
+  position: absolute; top: 76px; left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; gap: 5px; z-index: 6;
+}
+.igstory-seg {
+  flex: 1; height: 2.5px; border-radius: 99px; background: rgba(255,255,255,.3); overflow: hidden;
+}
+.igstory-seg-fill {
+  display: block; height: 100%; width: 0%; background: var(--white);
+  border-radius: 99px;
+}
+.igstory-seg-fill.done { width: 100%; }
+.igstory-seg-fill.playing { animation: igstory-fill linear forwards; }
+@keyframes igstory-fill { from { width: 0%; } to { width: 100%; } }
+
+.igstory-main {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  width: 100%; height: 100%; padding: 0 12px;
+}
+.igstory-side {
+  width: clamp(90px, 14vw, 220px); height: min(78vh, 560px);
+  border-radius: 18px; overflow: hidden; flex-shrink: 0;
+  opacity: .45; filter: saturate(.6);
+  background-size: cover; background-position: center;
+  display: none;
+  transition: opacity .2s ease;
+}
+.igstory-side:hover { opacity: .7; }
+@media (min-width: 740px) { .igstory-side { display: block; } }
+
+.igstory-card {
+  position: relative;
+  width: min(92vw, 400px); height: min(80vh, 620px);
+  border-radius: 20px; overflow: hidden;
+  background: #111;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.igstory-media { position: absolute; inset: 0; width: 100%; height: 100%; }
+.igstory-media img, .igstory-media video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+.igstory-card::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 72%, rgba(0,0,0,.35) 100%);
+}
+.igstory-tapzone { position: absolute; top: 0; bottom: 0; width: 34%; z-index: 4; }
+.igstory-tap-prev { right: 0; }
+.igstory-tap-next { left: 0; }
+
+.igstory-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,.9); box-shadow: var(--shadow-card);
+  display: grid; place-items: center; z-index: 5;
+}
+.igstory-arrow-prev { right: 10px; }
+.igstory-arrow-next { left: 10px; }
+.igstory-arrow svg { width: 16px; height: 16px; stroke: var(--black); fill: none; stroke-width: 2; }
+
+.igstory-caption {
+  position: absolute; bottom: 72px; right: 18px; left: 18px; z-index: 5;
+  color: var(--white); font-family: var(--font-ui); font-weight: 600; font-size: 15.5px;
+  line-height: 1.45; text-shadow: 0 2px 10px rgba(0,0,0,.5);
+}
+.igstory-stats {
+  position: absolute; bottom: 16px; right: 16px; left: 16px; z-index: 5;
+  display: flex; align-items: center; gap: 14px;
+  color: var(--white); font-size: 12px;
+}
+.igstory-stat {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--white); background: none;
+  transition: transform .15s ease;
+}
+.igstory-stat:active { transform: scale(.92); }
+.igstory-stat svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.igstory-like.liked svg { fill: #ff4d6d; stroke: #ff4d6d; }
+.igstory-like.liked { color: #ff8fa3; }
+.igstory-cta { margin-right: auto; background: var(--gradient); color: var(--white); font-weight: 700; padding: 7px 12px; border-radius: 99px; }
+.igstory-cta svg { width: 13px; height: 13px; stroke: var(--white); fill: none; stroke-width: 1.8; }
+
+.rc-toast {
+  position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: var(--black); color: var(--white); font-size: 13px; font-weight: 600;
+  padding: 11px 20px; border-radius: 99px; box-shadow: var(--shadow-card);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+}
+.rc-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 480px) {
+  .igstory-card { width: 100vw; height: 100vh; border-radius: 0; }
+  .igstory-head { top: max(18px, env(safe-area-inset-top, 0px)); }
+  .igstory-progress { top: calc(max(18px, env(safe-area-inset-top, 0px)) + 46px); }
+}
+
+/* ---------- icon-rail tooltips (Instagram style) ---------- */
+.icon-rail a { position: relative; }
+.icon-rail a::after {
+  content: attr(data-tooltip);
+  position: absolute; top: 50%; right: calc(100% + 10px);
+  transform: translateY(-50%) translateX(6px);
+  background: var(--black); color: var(--white);
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  padding: 6px 11px; border-radius: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 20;
+}
+.icon-rail a::before {
+  content: "";
+  position: absolute; top: 50%; right: calc(100% + 4px);
+  transform: translateY(-50%);
+  border: 5px solid transparent; border-right-color: var(--black);
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s ease;
+  z-index: 20;
+}
+.icon-rail a:hover::after, .icon-rail a:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+.icon-rail a:hover::before, .icon-rail a:focus-visible::before { opacity: 1; }
+@media (max-width: 860px) {
+  .icon-rail a::after, .icon-rail a::before { display: none; }
+}
+
+/* ---------- button interactions polish ---------- */
+.modal-close { transition: background .2s ease, transform .2s ease; }
+.modal-close:hover { background: rgba(255,255,255,.95); transform: scale(1.08) rotate(90deg); }
+
+.story-nav { transition: transform .2s ease, box-shadow .2s ease; }
+.story-nav:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 8px 20px rgba(0,0,0,.18); }
+.story-nav:active { transform: translateY(-50%) scale(.95); }
+
+.igstory-arrow { transition: transform .2s ease, background .2s ease; }
+.igstory-arrow:hover { transform: translateY(-50%) scale(1.12); background: var(--white); }
+.igstory-arrow:active { transform: translateY(-50%) scale(.94); }
+
+.igstory-stat { transition: transform .15s ease, opacity .15s ease; opacity: .9; }
+.igstory-stat:hover { opacity: 1; transform: scale(1.08); }
+
+.igstory-cta {
+  background: linear-gradient(120deg, var(--rose-1), var(--rose-2), #f3c66b, var(--rose-2), var(--rose-1));
+  background-size: 260% auto; background-position: 0% center;
+  transition: background-position .5s ease, transform .15s ease;
+}
+.igstory-cta:hover { background-position: 100% center; transform: scale(1.05); }
+
+.igstory-close { transition: background .2s ease, transform .2s ease; }
+.igstory-close:hover { transform: rotate(90deg) scale(1.08); }
+
+.igstory-side { transition: opacity .2s ease, transform .2s ease; }
+.igstory-side:hover { transform: scale(1.02); }
