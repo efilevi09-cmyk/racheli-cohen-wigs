@@ -598,7 +598,7 @@
      יש להחליף את הערך הבא במזהה לקוח (Client ID) אמיתי שנוצר ב-Google Cloud Console
      (OAuth consent screen > Credentials > Create Credentials > OAuth client ID > Web application),
      ולהוסיף את כתובת האתר החי (למשל https://racheli-cohen-wigs-site.pages.dev) ב-Authorized JavaScript origins. */
-  const RC_GOOGLE_CLIENT_ID = '';
+  const RC_GOOGLE_CLIENT_ID = '630651385703-vemvbsc51ti50t6srpufqkjbtm2p1502.apps.googleusercontent.com';
   let rcGoogleScriptLoading = false;
 
   function rcGoogleUser() {
