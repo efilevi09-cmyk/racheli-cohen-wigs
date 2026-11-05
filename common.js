@@ -398,31 +398,26 @@
       h1.setAttribute('aria-hidden', 'false');
       const chars = h1.querySelectorAll('.rc-char');
 
-      const accent = document.createElement('div');
-      accent.className = 'rc-heading-accent';
-      accent.innerHTML = `
-        <svg viewBox="0 0 140 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="rc-accent-grad" x1="0" y1="0" x2="140" y2="0" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="var(--rose-1)"/>
-              <stop offset="1" stop-color="var(--rose-2)"/>
-            </linearGradient>
-          </defs>
-          <path class="rc-accent-path" d="M3 12c10-10 20-10 30 0s20 10 30 0 20-10 30 0 20 10 30 0" stroke="url(#rc-accent-grad)" stroke-width="3" stroke-linecap="round"/>
-        </svg>`;
-      h1.insertAdjacentElement('afterend', accent);
-      const path = accent.querySelector('.rc-accent-path');
-      const len = path.getTotalLength();
-      path.style.strokeDasharray = String(len);
-      path.style.strokeDashoffset = String(len);
-
       gsap.timeline()
         .set(chars, { opacity: 0, y: 10 })
-        .set(accent, { opacity: 0 })
-        .to(chars, { opacity: 1, y: 0, duration: 0.025, stagger: 0.032, ease: 'none' })
-        .to(accent, { opacity: 1, duration: 0.25 }, '-=0.1')
-        .to(path, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, '<');
+        .to(chars, { opacity: 1, y: 0, duration: 0.025, stagger: 0.032, ease: 'none' });
     });
+  }
+
+  /* ---------------- home hero: crossfade + Ken-Burns zoom slider ---------------- */
+  function initHeroSlider() {
+    const slider = document.querySelector('.hero-slider');
+    if (!slider || slider.dataset.rcInit === '1') return;
+    slider.dataset.rcInit = '1';
+    const slides = Array.from(slider.querySelectorAll('.hero-slide'));
+    if (slides.length < 2) return;
+    let i = 0;
+    slides.forEach((s, idx) => s.classList.toggle('is-active', idx === 0));
+    setInterval(() => {
+      slides[i].classList.remove('is-active');
+      i = (i + 1) % slides.length;
+      slides[i].classList.add('is-active');
+    }, 6000);
   }
 
   window.RacheliModals = { open: openModal, close: closeAllModals };
@@ -435,6 +430,7 @@
     toggleArticleSaved: toggleArticleSaved,
     initArticlesPage: initArticlesPage,
     initHeadingEffects: initHeadingEffects,
+    initHeroSlider: initHeroSlider,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -1228,5 +1224,6 @@
     applyRingSegments();
     renderLikedVideosGrid();
     initHeadingEffects();
+    initHeroSlider();
   });
 })();
