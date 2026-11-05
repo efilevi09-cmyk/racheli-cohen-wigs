@@ -22,17 +22,22 @@
     grid: '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/>',
   };
 
-  /* סדר תפריט הניווט הראשי — לפי המבנה המעודכן */
+  /* סדר תפריט הניווט הראשי — לפי המבנה המעודכן.
+     הערה: שמות מפתחות האייקון (icon) הם היסטוריים ולא תמיד תואמים את הצורה/העמוד בפועל —
+     ה-PNG בפועל שכל אחד מציג מוגדר ב-NAV_ICON_IMG למטה. מיפוי קבצים בפועל נכון לעכשיו:
+     home→בית, chat→בועת שיחה (אודות), sparkle→שיער עם נצנוץ (פאה חדשה), rings→טבעות (כלה),
+     people→דיוקן עם חץ (חידוש פאה), heart→כפתור פליי (פיד), search→זכוכית מגדלת (חיפוש),
+     info→לב אמיתי (תוכן שאהבתי), calendar→לוח שנה (קביעת פגישה) */
   const NAV = [
     { icon: 'home', route: 'home', label: 'דף בית' },
-    { icon: 'info', route: 'about', label: 'אודות' },
+    { icon: 'chat', route: 'about', label: 'אודות' },
     { icon: 'sparkle', route: 'new-wig', label: 'פאה חדשה' },
     { icon: 'rings', route: 'bride', label: 'כלה' },
     { icon: 'people', route: 'renew-wig', label: 'חידוש פאה' },
-    { icon: 'chat', route: 'feed', label: 'פיד' },
+    { icon: 'heart', route: 'feed', label: 'פיד' },
     { icon: 'grid', route: 'articles', label: 'עולם תוכן' },
     { icon: 'search', route: null, label: 'חיפוש', modal: 'search' },
-    { icon: 'heart', route: 'videos', label: 'תוכן שאהבתי' },
+    { icon: 'info', route: 'videos', label: 'תוכן שאהבתי' },
     { icon: 'calendar', route: 'contact', label: 'קביעת פגישה' },
   ];
 
