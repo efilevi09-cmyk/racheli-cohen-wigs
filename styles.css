@@ -174,30 +174,15 @@ h1, h2, h3, h4 {
   flex-direction: column;
   overflow: hidden;
 }
-.hero-slider {
-  position: absolute; inset: 0;
-  overflow: hidden;
-}
-.hero-slide {
+.hero-bg {
   position: absolute; inset: 0;
   background-size: cover;
   background-position: center 20%;
-  opacity: 0;
-  transform: scale(1);
-  transition: opacity 1.4s ease;
 }
-.hero-slide.is-active {
-  opacity: 1;
-  transition: opacity 1.4s ease, transform 7s ease-out;
-  transform: scale(1.12);
-}
-.hero-overlay {
+.hero-bg::after {
+  content: "";
   position: absolute; inset: 0;
-  z-index: 1;
   background: rgba(0,0,0,0.38);
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-slide.is-active { transform: scale(1); transition: opacity 1.4s ease; }
 }
 .hero-content {
   position: relative;

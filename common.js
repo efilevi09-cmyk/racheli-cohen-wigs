@@ -409,22 +409,6 @@
     });
   }
 
-  /* ---------------- home hero: crossfade + Ken-Burns zoom slider ---------------- */
-  function initHeroSlider() {
-    const slider = document.querySelector('.hero-slider');
-    if (!slider || slider.dataset.rcInit === '1') return;
-    slider.dataset.rcInit = '1';
-    const slides = Array.from(slider.querySelectorAll('.hero-slide'));
-    if (slides.length < 2) return;
-    let i = 0;
-    slides.forEach((s, idx) => s.classList.toggle('is-active', idx === 0));
-    setInterval(() => {
-      slides[i].classList.remove('is-active');
-      i = (i + 1) % slides.length;
-      slides[i].classList.add('is-active');
-    }, 6000);
-  }
-
   window.RacheliModals = { open: openModal, close: closeAllModals };
   window.RacheliCommon = {
     mountRail, mountLogo, mountFooter, mountModals,
@@ -435,7 +419,6 @@
     toggleArticleSaved: toggleArticleSaved,
     initArticlesPage: initArticlesPage,
     initHeadingEffects: initHeadingEffects,
-    initHeroSlider: initHeroSlider,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -1229,6 +1212,5 @@
     applyRingSegments();
     renderLikedVideosGrid();
     initHeadingEffects();
-    initHeroSlider();
   });
 })();
