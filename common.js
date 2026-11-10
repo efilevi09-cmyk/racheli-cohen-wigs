@@ -513,6 +513,23 @@
        שתמיד ייצא עודף תמונות על פני השטח הדרוש, ולא חוסר שישאיר "חור" ריק) */
     return Math.max(28, Math.min(totalCells, 150));
   }
+  /* בונה אריח קולאז' בודד: רקע מטושטש (collage-tile-bg, cover - ממלא לגמרי, בלי חור ריק) + התמונה
+     האמיתית מעליו ב-object-fit:contain (img) - כך שהתמונה השלמה תמיד נראית, בלי לחתוך ראשים/פרצופים */
+  function buildCollageTile(src, spanClass, loading) {
+    const tile = document.createElement('div');
+    tile.className = 'collage-tile' + (spanClass ? ' ' + spanClass : '');
+    const bg = document.createElement('div');
+    bg.className = 'collage-tile-bg';
+    bg.style.backgroundImage = `url(${src})`;
+    tile.appendChild(bg);
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    img.loading = loading;
+    img.decoding = 'async';
+    tile.appendChild(img);
+    return tile;
+  }
   function initHeroCollage() {
     const collage = document.getElementById('hero-collage') || document.querySelector('.hero-collage');
     if (!collage || collage.dataset.rcCollageInit === '1') return;
@@ -522,15 +539,7 @@
     const frag = document.createDocumentFragment();
     sequence.forEach((src, i) => {
       const spanClass = COLLAGE_SPAN_PATTERN[i % COLLAGE_SPAN_PATTERN.length];
-      const tile = document.createElement('div');
-      tile.className = 'collage-tile' + (spanClass ? ' ' + spanClass : '');
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = '';
-      img.loading = i < 10 ? 'eager' : 'lazy';
-      img.decoding = 'async';
-      tile.appendChild(img);
-      frag.appendChild(tile);
+      frag.appendChild(buildCollageTile(src, spanClass, i < 10 ? 'eager' : 'lazy'));
     });
     collage.appendChild(frag);
     collage.dataset.rcTileCount = String(sequence.length);
@@ -547,17 +556,10 @@
         const extraFrag = document.createDocumentFragment();
         extra.forEach((src, i) => {
           const spanClass = COLLAGE_SPAN_PATTERN[(have + i) % COLLAGE_SPAN_PATTERN.length];
-          const tile = document.createElement('div');
-          tile.className = 'collage-tile' + (spanClass ? ' ' + spanClass : '');
-          const img = document.createElement('img');
-          img.src = src;
-          img.alt = '';
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          tile.appendChild(img);
+          const tile = buildCollageTile(src, spanClass, 'lazy');
           extraFrag.appendChild(tile);
           if (window.gsap && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-            gsap.to(img, {
+            gsap.to(tile.querySelector('img'), {
               scale: 1.12, duration: 4.2, ease: 'sine.inOut', yoyo: true, repeat: -1,
               delay: Math.random() * 1.5,
             });

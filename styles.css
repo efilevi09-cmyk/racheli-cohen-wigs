@@ -201,7 +201,7 @@ h1, h2, h3, h4 {
   grid-template-columns: repeat(12, 1fr);
   grid-auto-rows: clamp(62px, 6.4vw, 96px);
   gap: clamp(7px, 1vw, 14px);
-  background: linear-gradient(160deg, #3a1220 0%, #4a1826 45%, #2c0e18 100%);
+  background: linear-gradient(160deg, #1c0f09 0%, #2a150d 45%, #110a07 100%);
   transform: rotate(-4deg) scale(1.2);
   transform-origin: center;
   will-change: transform;
@@ -211,35 +211,39 @@ h1, h2, h3, h4 {
   position: relative;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: rgba(30,10,16,.5);
-  box-shadow: 0 14px 34px -12px rgba(0,0,0,.55);
+  background: rgba(10,5,4,.6);
+  box-shadow: 0 14px 34px -12px rgba(0,0,0,.6);
 }
 .collage-tile.sz-w2 { grid-column: span 2; }
 .collage-tile.sz-h2 { grid-row: span 2; }
-/* object-fit: cover עם הטיית object-position כלפי מעלה - כך שבתמונות דיוקן (פנים) הקאדר לא
-   חותך את הפרצוף גם באריחים מוארכים/נמוכים. blend-mode luminosity + שקיפות קלה - התמונות
-   "נטמעות" בגוון הרקע במקום לשבת עליו כתמונות מלאות-עוצמה */
+/* שכבה כפולה: רקע מטושטש (cover, לא נראה כמו "חור" ריק) + התמונה האמיתית מעליו ב-object-fit:contain -
+   כך שהתמונה המלאה תמיד נראית שלמה, בלי לחתוך ראשים/פרצופים, אבל האריח עדיין מלא לגמרי מקצה לקצה */
+.collage-tile-bg {
+  position: absolute; inset: -12%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(16px) brightness(.6) saturate(1.05);
+  transform: scale(1.1);
+}
 .collage-tile img {
+  position: relative;
+  z-index: 1;
   width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: 50% 22%;
+  object-fit: contain;
   display: block;
-  opacity: .85;
-  mix-blend-mode: luminosity;
   transform-origin: center;
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
   .collage-tile img { animation: none !important; transition: none !important; }
 }
-/* overlay ורוד-חמים ובהיר יותר, עם ריכוז כהות רק מאחורי הטקסט/כפתורים (הציר התחתון) כדי
-   שהטקסט לא "יבלע" - אבל השטח הכללי מרגיש מואר ולא שחור */
+/* overlay כהה - חזרה לשחור/חום כהה כבסיס, עם ריכוז כהות נוסף מאחורי הטקסט/כפתורים */
 .hero-overlay {
   position: absolute; inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 78% 62% at 50% 76%, rgba(42,13,22,.9) 0%, rgba(42,13,22,.62) 46%, rgba(42,13,22,.04) 76%),
-    linear-gradient(180deg, rgba(224,148,160,.4) 0%, rgba(167,84,99,.28) 26%, rgba(96,34,47,.3) 56%, rgba(44,13,21,.8) 100%);
+    radial-gradient(ellipse 73% 58% at 50% 72%, rgba(6,3,2,.92) 0%, rgba(6,3,2,.68) 45%, rgba(6,3,2,.05) 74%),
+    linear-gradient(180deg, rgba(6,3,2,.76) 0%, rgba(6,3,2,.5) 28%, rgba(6,3,2,.54) 60%, rgba(6,3,2,.88) 100%);
   pointer-events: none;
 }
 .hero-content {
