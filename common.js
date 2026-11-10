@@ -102,6 +102,26 @@
       <span>עוצב ופותח ע"י אפרת אסולין</span>`;
   }
 
+  /* ---------------- כפתור "קבעי פגישה" צף - מופיע בכל עמודי האתר ---------------- */
+  function mountSideCta() {
+    if (document.getElementById('site-side-cta')) return;
+    if (document.body.dataset.page === 'admin') return;
+    const content = document.querySelector('.content');
+    if (!content) return;
+    const holder = document.createElement('div');
+    holder.innerHTML = `
+      <div class="side-cta" id="site-side-cta">
+        <a href="#" data-open-modal="appointment">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="writing-mode:horizontal-tb"><path d="m9 18 6-6-6-6"/></svg>
+          קבעי פגישה
+        </a>
+      </div>`;
+    const el = holder.firstElementChild;
+    const footer = document.getElementById('site-footer');
+    if (footer && footer.parentElement === content) content.insertBefore(el, footer);
+    else content.appendChild(el);
+  }
+
   /* ---------------- modals ---------------- */
   /* מיפוי הקשר (journey) לפי עמוד, כדי שפופאפ קביעת הפגישה "יזהה על מה מדובר" */
   const JOURNEY_CONTEXT_LABELS = {
@@ -134,15 +154,15 @@
         <p class="sub apt-context-sub" id="apt-context-sub" hidden></p>
         <form id="appointment-form">
           <div class="field-row">
-            <div class="field"><input type="tel" id="apt-phone" placeholder="טלפון:" required></div>
-            <div class="field"><input type="text" id="apt-name" placeholder="שם:" required></div>
+            <div class="field"><input type="tel" dir="rtl" id="apt-phone" placeholder="טלפון:" required></div>
+            <div class="field"><input type="text" dir="rtl" id="apt-name" placeholder="שם:" required></div>
           </div>
           <div class="field-row">
-            <div class="field"><input type="text" id="apt-date" placeholder="תאריך פנוי:" onfocus="(this.type='date')" required></div>
-            <div class="field"><input type="text" id="apt-time" placeholder="שעה מועדפת:" onfocus="(this.type='time')"></div>
+            <div class="field"><input type="text" dir="rtl" id="apt-date" placeholder="תאריך פנוי:" onfocus="(this.type='date')" required></div>
+            <div class="field"><input type="text" dir="rtl" id="apt-time" placeholder="שעה מועדפת:" onfocus="(this.type='time')"></div>
           </div>
           <div class="field-row">
-            <div class="field"><input type="email" id="apt-email" placeholder="מייל:"></div>
+            <div class="field"><input type="email" dir="rtl" id="apt-email" placeholder="מייל:"></div>
           </div>
           <label class="consent-row">
             <input type="checkbox" required>
@@ -450,6 +470,7 @@
     initHeadingEffects: initHeadingEffects,
     initMiscLikeButtons: initMiscLikeButtons,
     initRevealAnimations: initRevealAnimations,
+    mountSideCta: mountSideCta,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -792,6 +813,17 @@
   }
 
   /* ---------------- כפתורי "אהבתי" כלליים (פיד + כרטיסי מסע) ---------------- */
+  /* קטלוג פריטים ניתנים ל"אהבתי" שאינם חלק מהסטוריז (כרטיסי פיד, כרטיסי מסע) -
+     כדי שגם הם יופיעו בעמוד "תוכן שאהבתי" */
+  const MISC_LIKE_ITEMS = {
+    'feed-1': { img: 'assets/feed_card1.jpg', caption: 'טיפוח יומיומי לפאה', route: 'feed' },
+    'feed-2': { img: 'assets/feed_card2.jpg', caption: 'מבנה ודילול נכון', route: 'feed' },
+    'feed-3': { img: 'assets/feed_card3.jpg', caption: 'שילוב גוונים טבעי', route: 'feed' },
+    'feed-4': { img: 'assets/feed_card4.jpg', caption: 'תנועה טבעית בפאה', route: 'feed' },
+    'bride-story-1': { img: 'assets/journey_center.jpg', caption: 'אני כלה', route: 'bride' },
+    'new-wig-story-1': { img: 'assets/journey_center.jpg', caption: 'מחפשת פאה חדשה', route: 'new-wig' },
+    'renew-wig-story-1': { img: 'assets/journey_center.jpg', caption: 'חולמת לחדש את הפאה שלי', route: 'renew-wig' },
+  };
   function miscLikedSet() {
     try { return new Set(JSON.parse(localStorage.getItem('rc-liked-misc') || '[]')); }
     catch (e) { return new Set(); }
@@ -822,12 +854,14 @@
             saveMiscLiked(set);
             setState(true);
             showToast('נשמר ל"אהבתי"!');
+            renderLikedVideosGrid();
           });
         } else {
           const set = miscLikedSet();
           set.delete(id);
           saveMiscLiked(set);
           setState(false);
+          renderLikedVideosGrid();
         }
       });
     });
@@ -1026,24 +1060,45 @@
     TOPICS.forEach((topic) => {
       topic.slides.forEach((slide, sIdx) => {
         if (liked.has(slideKey(topic, sIdx))) {
-          items.push({ topic, sIdx, slide });
+          items.push({ kind: 'story', topic, sIdx, slide });
         }
       });
     });
+    const miscLiked = miscLikedSet();
+    Object.keys(MISC_LIKE_ITEMS).forEach((id) => {
+      if (miscLiked.has(id)) {
+        items.push({ kind: 'misc', id, item: MISC_LIKE_ITEMS[id] });
+      }
+    });
     if (!items.length) {
-      grid.innerHTML = '<p class="videos-empty">עדיין לא סימנת תוכן שאהבת. פתחי סטורי ולחצי על "אהבתי" כדי לשמור אותו כאן.</p>';
+      grid.innerHTML = '<p class="videos-empty">עדיין לא סימנת תוכן שאהבת. לחצי על "אהבתי" בכל מקום באתר כדי לשמור אותו כאן.</p>';
       return;
     }
-    grid.innerHTML = items.map((it) => `
+    grid.innerHTML = items.map((it) => {
+      if (it.kind === 'misc') {
+        return `
+      <div class="video-card" data-misc-id="${it.id}" role="button" tabindex="0" aria-label="${it.item.caption}">
+        <img src="${it.item.img}" alt="${it.item.caption}" loading="lazy">
+        <span class="liked-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg></span>
+      </div>`;
+      }
+      return `
       <div class="video-card" data-topic="${it.topic.id}" data-slide="${it.sIdx}" role="button" tabindex="0" aria-label="צפייה בתוכן">
         ${it.slide.type === 'video'
           ? `<video src="${slideDisplaySrc(it.slide)}" muted playsinline preload="metadata"></video>`
           : `<img src="${slideDisplaySrc(it.slide)}" alt="${it.slide.caption || ''}" loading="lazy">`}
         <span class="liked-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg></span>
         ${it.slide.type === 'video' ? `<span class="play-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,.25)"/><path d="M10 8.5 16 12l-6 3.5v-7Z"/></svg></span>` : ''}
-      </div>`).join('');
-    grid.querySelectorAll('.video-card').forEach((card) => {
+      </div>`;
+    }).join('');
+    grid.querySelectorAll('.video-card[data-topic]').forEach((card) => {
       const open = () => openStoryViewer(card.dataset.topic, parseInt(card.dataset.slide, 10));
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
+    grid.querySelectorAll('.video-card[data-misc-id]').forEach((card) => {
+      const item = MISC_LIKE_ITEMS[card.dataset.miscId];
+      const open = () => { if (item) location.href = rcHref(item.route); };
       card.addEventListener('click', open);
       card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
@@ -1332,6 +1387,7 @@
     mountLogo();
     mountFooter();
     mountModals();
+    mountSideCta();
     await loadTopics();
     mountStoryViewer();
     applyRingSegments();

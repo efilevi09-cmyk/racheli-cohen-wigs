@@ -411,6 +411,7 @@ footer.site-footer .links { display: flex; gap: 18px; }
 /* ---------- mobile ---------- */
 @media (max-width: 860px) {
   .body-row { flex-direction: column; min-height: 0; }
+  .content { width: 100%; max-width: 100%; }
   .side-col {
     width: 100%; flex: 0 0 auto; height: auto; position: sticky; top: 0;
     flex-direction: row; justify-content: space-between; align-items: center;
@@ -432,7 +433,28 @@ footer.site-footer .links { display: flex; gap: 18px; }
   .journey-avatar { width: 36px; height: 36px; }
   .hero-content .eyebrow { font-size: clamp(19px, 5vw, 26px); }
   .hero-content h1 { font-size: clamp(27px, 7vw, 38px); }
+
+  /* הסטטוסים (נושאי הטיפים) - גלילה אופקית במקום שבירה לשורה חדשה, כך שרואים כמה שיותר בבת אחת */
+  .topics-row {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximate;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-inline: max(16px, env(safe-area-inset-left, 0px));
+  }
+  .topics-row::-webkit-scrollbar { display: none; }
+  .topic { flex: 0 0 auto; scroll-snap-align: start; }
 }
 @media (max-width: 520px) {
   .icon-rail a:nth-child(n+7) { display: none; }
+}
+@media (max-width: 480px) {
+  /* צפיפות מותאמת כך שיראו כ-6 נושאים על המסך בבת אחת, עם גלילה להמשך */
+  .topics-row { gap: 12px; }
+  .topic { width: 52px; gap: 5px; }
+  .topic-ring { width: 46px; height: 46px; }
+  .topic span { font-size: 10px; }
 }
