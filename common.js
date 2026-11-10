@@ -20,6 +20,8 @@
     bookmark: '<path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/>',
     photo: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/><path d="m4.5 16.5 4.5-4.5a1.8 1.8 0 0 1 2.5 0l1.6 1.6M14 13.8l1.1-1.1a1.8 1.8 0 0 1 2.5 0l1.9 1.9"/>',
     grid: '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/>',
+    soundOn: '<path d="M4 9.5v5h4l5 4v-13l-5 4H4Z"/><path d="M16.5 9.2a4.5 4.5 0 0 1 0 5.6M19 7a8 8 0 0 1 0 10"/>',
+    soundOff: '<path d="M4 9.5v5h4l5 4v-13l-5 4H4Z"/><path d="m15.5 10 4 4M19.5 10l-4 4"/>',
   };
 
   /* סדר תפריט הניווט הראשי — לפי המבנה המעודכן.
@@ -656,6 +658,7 @@
   let igPaused = false;
   let igCurrentDuration = STORY_DURATION;
   let igMediaEl = null;
+  let igMuted = false; /* כברירת מחדל מנסים להשמיע קול - פתיחת הסטורי היא כבר קליק ישיר של המשתמשת */
 
   /* ---------------- shared content store (IndexedDB) used by the admin CMS ---------------- */
   const RCStore = (function () {
@@ -887,32 +890,35 @@
       <div class="igstory-stage">
         <div class="igstory-main">
           <div class="igstory-side" id="igstory-peek-prev"></div>
-          <div class="igstory-card" id="igstory-card">
-            <div class="igstory-media" id="igstory-media"></div>
-            <div class="igstory-progress" id="igstory-progress"></div>
-            <div class="igstory-head">
-              <div class="igstory-logo">
-                <div class="logo-mark">RC</div>
-                <span>RACHELI COHEN</span>
-                <span class="igstory-topic-tag" id="igstory-topic-tag"></span>
+          <div class="igstory-card-wrap">
+            <div class="igstory-topics-strip" id="igstory-topics-strip"></div>
+            <div class="igstory-card" id="igstory-card">
+              <div class="igstory-media" id="igstory-media"></div>
+              <div class="igstory-progress" id="igstory-progress"></div>
+              <div class="igstory-head">
+                <button class="igstory-close" id="igstory-close" aria-label="סגירה">${svg('close')}</button>
+                <div class="igstory-logo">
+                  <div class="logo-mark">RC</div>
+                  <span>RACHELI COHEN</span>
+                  <span class="igstory-topic-tag" id="igstory-topic-tag"></span>
+                </div>
               </div>
-              <button class="igstory-close" id="igstory-close" aria-label="סגירה">${svg('close')}</button>
-            </div>
-            <button class="igstory-arrow igstory-arrow-prev" id="igstory-arrow-prev" aria-label="הסיפור הקודם">${svg('chevronR')}</button>
-            <button class="igstory-arrow igstory-arrow-next" id="igstory-arrow-next" aria-label="הסיפור הבא">${svg('chevronL')}</button>
-            <div class="igstory-tapzone igstory-tap-prev" data-tap="prev"></div>
-            <div class="igstory-tapzone igstory-tap-next" data-tap="next"></div>
-            <h3 class="igstory-caption" id="igstory-caption"></h3>
-            <div class="igstory-stats">
-              <span class="igstory-stat"><svg viewBox="0 0 24 24">${ICONS.eye}</svg><b id="igstory-views">220</b></span>
-              <button class="igstory-stat igstory-like" id="igstory-like"><svg viewBox="0 0 24 24">${ICONS.heart}</svg><span>אהבתי</span></button>
-              <button class="igstory-stat" id="igstory-share"><svg viewBox="0 0 24 24">${ICONS.share}</svg><span>שיתוף</span></button>
-              <button class="igstory-stat igstory-cta" id="igstory-cta"><svg viewBox="0 0 24 24">${ICONS.calendar}</svg><span>קביעת פגישה</span></button>
+              <button class="igstory-arrow igstory-arrow-prev" id="igstory-arrow-prev" aria-label="הסיפור הקודם">${svg('chevronR')}</button>
+              <button class="igstory-arrow igstory-arrow-next" id="igstory-arrow-next" aria-label="הסיפור הבא">${svg('chevronL')}</button>
+              <div class="igstory-tapzone igstory-tap-prev" data-tap="prev"></div>
+              <div class="igstory-tapzone igstory-tap-next" data-tap="next"></div>
+              <h3 class="igstory-caption" id="igstory-caption"></h3>
+              <div class="igstory-stats">
+                <button class="igstory-stat igstory-mute" id="igstory-mute" aria-label="השתקה/ביטול השתקה" hidden><svg viewBox="0 0 24 24">${ICONS.soundOn}</svg></button>
+                <span class="igstory-stat"><svg viewBox="0 0 24 24">${ICONS.eye}</svg><b id="igstory-views">220</b></span>
+                <button class="igstory-stat igstory-like" id="igstory-like"><svg viewBox="0 0 24 24">${ICONS.heart}</svg><span>אהבתי</span></button>
+                <button class="igstory-stat" id="igstory-share"><svg viewBox="0 0 24 24">${ICONS.share}</svg><span>שיתוף</span></button>
+                <button class="igstory-stat igstory-cta" id="igstory-cta"><svg viewBox="0 0 24 24">${ICONS.calendar}</svg><span>קביעת פגישה</span></button>
+              </div>
             </div>
           </div>
           <div class="igstory-side" id="igstory-peek-next"></div>
         </div>
-        <div class="igstory-topics-strip" id="igstory-topics-strip"></div>
       </div>
     </div>`;
   }
@@ -1261,6 +1267,15 @@
     });
   }
 
+  /* מציג את כפתור הקול רק כשהשקופית הנוכחית היא וידאו, ומעדכן את האייקון לפי מצב ההשתקה */
+  function igUpdateMuteBtn() {
+    const btn = document.getElementById('igstory-mute');
+    if (!btn) return;
+    const isVideo = igMediaEl && igMediaEl.tagName === 'VIDEO';
+    btn.hidden = !isVideo;
+    btn.innerHTML = `<svg viewBox="0 0 24 24">${igMuted ? ICONS.soundOff : ICONS.soundOn}</svg>`;
+  }
+
   function igRenderMedia(slide) {
     const mount = document.getElementById('igstory-media');
     if (!mount) return;
@@ -1269,7 +1284,7 @@
     if (slide.type === 'video') {
       const video = document.createElement('video');
       video.src = slideDisplaySrc(slide);
-      video.muted = true;
+      video.muted = igMuted;
       video.autoplay = true;
       video.playsInline = true;
       video.className = 'igstory-video';
@@ -1283,13 +1298,24 @@
         }
       });
       video.addEventListener('ended', () => { igNext(); igScheduleNext(); });
-      video.play().catch(() => {});
+      /* דפדפנים חוסמים השמעה אוטומטית עם קול בלי "מחווה" ישירה של המשתמשת - אם ההשמעה עם קול
+         נחסמת, חוזרים אוטומטית להשתקה כדי שלפחות הווידאו עצמו ינגן, ומעדכנים את כפתור הקול בהתאם */
+      video.play().catch(() => {
+        if (!video.muted) {
+          video.muted = true;
+          igMuted = true;
+          igUpdateMuteBtn();
+          video.play().catch(() => {});
+        }
+      });
+      igUpdateMuteBtn();
     } else {
       const img = document.createElement('img');
       img.src = slideDisplaySrc(slide);
       img.alt = currentTopic().label;
       mount.appendChild(img);
       igCurrentDuration = STORY_DURATION;
+      igUpdateMuteBtn();
     }
   }
 
@@ -1341,10 +1367,10 @@
         });
       });
     }
+    /* הרצועה עכשיו מרכזת ועוטפת לשורה נוספת (flex-wrap) כך שכל הנושאים תמיד גלויים - אין יותר
+       גלילה שמסתירה חלק מהם, ולכן אין צורך לגלול אל הנושא הפעיל */
     strip.querySelectorAll('.igstory-topic-chip').forEach((btn, i) => {
-      const isActive = i === igTopicIndex;
-      btn.classList.toggle('active', isActive);
-      if (isActive) btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      btn.classList.toggle('active', i === igTopicIndex);
     });
   }
 
@@ -1485,6 +1511,16 @@
       const label = currentTopic().label;
       closeStoryViewer();
       openModal('appointment', { contextLabel: 'סטורי ' + label });
+    });
+
+    document.getElementById('igstory-mute').addEventListener('click', (e) => {
+      e.stopPropagation();
+      igMuted = !igMuted;
+      if (igMediaEl && igMediaEl.tagName === 'VIDEO') {
+        igMediaEl.muted = igMuted;
+        if (!igMuted) igMediaEl.play().catch(() => {});
+      }
+      igUpdateMuteBtn();
     });
 
     document.getElementById('igstory-overlay').addEventListener('click', (e) => {

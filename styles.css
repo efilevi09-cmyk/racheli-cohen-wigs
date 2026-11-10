@@ -216,24 +216,28 @@ h1, h2, h3, h4 {
 }
 .collage-tile.sz-w2 { grid-column: span 2; }
 .collage-tile.sz-h2 { grid-row: span 2; }
-/* object-fit: cover - ממלא את כל האריח בלי מרווחים/פסים ריקים בין התמונות */
+/* object-fit: cover - ממלא את כל האריח בלי מרווחים/פסים ריקים בין התמונות
+   blend-mode luminosity + שקיפות קלה - התמונות "נטמעות" בגוון הכהה של הרקע במקום לשבת עליו כתמונות
+   מלאות-עוצמה, כך שהקולג נרגע ומתמזג גם בלי overlay כהה מדי */
 .collage-tile img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
+  opacity: .8;
+  mix-blend-mode: luminosity;
   transform-origin: center;
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
   .collage-tile img { animation: none !important; transition: none !important; }
 }
-/* overlay כפול - כהות מאוזנת: מספיק לקריאות של הטקסט, אבל לא כהה מדי כך שהקולג עדיין נראה */
+/* overlay כפול - כהות חזקה יותר, עם הטמעת luminosity של התמונות עצמן זה כבר לא "בולע" אותן */
 .hero-overlay {
   position: absolute; inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 73% 58% at 50% 72%, rgba(8,4,3,.85) 0%, rgba(8,4,3,.55) 45%, rgba(8,4,3,0) 74%),
-    linear-gradient(180deg, rgba(8,4,3,.62) 0%, rgba(8,4,3,.36) 28%, rgba(8,4,3,.4) 60%, rgba(8,4,3,.78) 100%);
+    radial-gradient(ellipse 73% 58% at 50% 72%, rgba(6,3,2,.92) 0%, rgba(6,3,2,.68) 45%, rgba(6,3,2,.05) 74%),
+    linear-gradient(180deg, rgba(6,3,2,.76) 0%, rgba(6,3,2,.5) 28%, rgba(6,3,2,.54) 60%, rgba(6,3,2,.88) 100%);
   pointer-events: none;
 }
 .hero-content {

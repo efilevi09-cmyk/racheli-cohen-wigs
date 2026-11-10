@@ -306,6 +306,12 @@
 .igstory-side:hover { opacity: .7; }
 @media (min-width: 740px) { .igstory-side { display: block; } }
 
+/* עוטף את הכרטיס + רצועת הסטוריז יחד כיחידה אחת ממורכזת - כך שהרצועה תמיד "דבוקה" לחלון הצפייה,
+   ממש מעליו, ולא מרחפת רחוק בשטח הריק של המסך */
+.igstory-card-wrap {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
 .igstory-card {
   position: relative;
   width: min(92vw, 400px); height: min(80vh, 620px);
@@ -357,15 +363,15 @@
 .igstory-cta { margin-right: auto; background: var(--gradient); color: var(--white); font-weight: 700; padding: 7px 12px; border-radius: 99px; }
 .igstory-cta svg { width: 13px; height: 13px; stroke: var(--white); fill: none; stroke-width: 1.8; }
 
-/* רצועת כל נושאי הסטורי - אותה שורת "סטוריז" שמופיעה בדף הבית, ממוקמת עכשיו גם למעלה בתוך החלונית
-   עצמה (מתחת לראש) כדי שהיא לא תיעלם כשנכנסים לצפייה בסטורי, אלא תישאר גלויה ותאפשר לדלג לכל נושא */
+/* רצועת כל נושאי הסטורי - אותה שורת "סטוריז" שמופיעה בדף הבית, יושבת עכשיו ממש מעל חלון הצפייה
+   (בתוך .igstory-card-wrap) כדי שהיא תמיד תהיה דבוקה אליו ולא תיעלם/תרחף בשטח ריק. ממורכזת, ועם
+   flex-wrap כדי שכל הנושאים תמיד יהיו גלויים בבת אחת (בלי גלילה שמסתירה רוב מהם) */
 .igstory-topics-strip {
-  position: absolute; top: 64px; left: 0; right: 0;
-  display: flex; gap: 14px; overflow-x: auto;
-  padding: 2px max(16px, env(safe-area-inset-left, 0px)) 6px max(16px, env(safe-area-inset-right, 0px));
-  z-index: 7; scrollbar-width: none;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 10px;
+  width: min(92vw, 460px);
+  padding: 2px 4px 4px;
+  z-index: 7;
 }
-.igstory-topics-strip::-webkit-scrollbar { display: none; }
 .igstory-topic-chip {
   flex: 0 0 auto;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -408,7 +414,12 @@
   /* במסך מלא במובייל כל השורות התחתונות מתרוממות לפי אזור הבטיחות של המכשיר, ושומרות על המרחק זו מזו */
   .igstory-stats { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
   .igstory-caption { bottom: calc(124px + env(safe-area-inset-bottom, 0px)); }
-  .igstory-topics-strip { top: calc(max(12px, env(safe-area-inset-top, 0px)) + 58px); gap: 10px; }
+  /* בפריסת מסך-מלא אין שטח מעל הכרטיס, אז הרצועה חוזרת לשכב בתוכו, בחלק העליון */
+  .igstory-card-wrap { gap: 0; }
+  .igstory-topics-strip {
+    position: absolute; top: calc(max(12px, env(safe-area-inset-top, 0px)) + 58px); left: 0; right: 0;
+    width: auto; gap: 10px;
+  }
   /* צפיפות שמציגה כ-6 נושאים בבת אחת ברצועת הטופ-סטורי, בהתאמה לשורת הסטטוסים העליונה */
   .igstory-topic-chip { width: 48px; gap: 4px; }
   .igstory-topic-avatar { width: 44px; height: 44px; }
