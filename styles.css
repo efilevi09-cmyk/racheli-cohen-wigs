@@ -269,15 +269,20 @@ h1, h2, h3, h4 {
 }
 
 /* ---------- topics row ---------- */
+/* שורה אחת קבועה (לא נשברת לכמה שורות) - אם אין מספיק רוחב אפשר לגלול אופקית, אבל שום נושא לא
+   "נעלם"/מוסתר אוטומטית, בדיוק כמו רצועת הנושאים בתוך הסטורי */
 .topics-row {
   position: relative;
   z-index: 3;
   display: flex;
   justify-content: center;
   gap: clamp(14px, 2vw, 28px);
-  padding: 26px 16px 0;
-  flex-wrap: wrap;
+  padding: 26px 16px 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.topics-row::-webkit-scrollbar { display: none; }
 .topic {
   display: flex; flex-direction: column; align-items: center; gap: 7px;
   width: 94px;
