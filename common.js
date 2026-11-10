@@ -1353,7 +1353,7 @@
     if (!card || !main) return;
     const cardRect = card.getBoundingClientRect();
     if (!cardRect.width) return;
-    const gap = 12;
+    const gap = 6;
     const mainWidth = main.getBoundingClientRect().width;
     const sidePerGroup = Math.max(0, (mainWidth - cardRect.width) / 2 - gap);
     const count = Math.max(0, Math.min(SIDE_PEEK_MAX, Math.floor((sidePerGroup + gap) / (cardRect.width + gap))));

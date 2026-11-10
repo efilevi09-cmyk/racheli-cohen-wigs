@@ -299,7 +299,7 @@
 @keyframes igstory-fill { from { width: 0%; } to { width: 100%; } }
 
 .igstory-main {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   width: 100%; padding: 0 12px;
 }
 /* קבוצת פריקים בכל צד - עד SIDE_PEEK_MAX סטוריז קרובים, כולם באותו גודל בדיוק כמו הכרטיס האמצעי
@@ -307,7 +307,7 @@
    בלי חפיפה - חייב להתאים בדיוק לערך ה-gap שם */
 .igstory-side-group {
   display: none;
-  align-items: center; gap: 12px;
+  align-items: center; gap: 6px;
   flex: 0 0 auto;
   height: min(60vh, 560px);
 }
