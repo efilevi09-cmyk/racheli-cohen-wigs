@@ -196,7 +196,9 @@
   display: flex; align-items: center; gap: 8px;
   background: var(--gradient);
   color: var(--white); font-weight: 700; font-size: 15px;
-  padding: 16px 20px; border-radius: 16px 0 0 16px;
+  padding: 18px 24px 18px 16px;
+  /* הצד הצמוד לקצה המסך (שמאל) נשאר ישר/מרובע, והצד הפונה פנימה מתעגל לגמרי כמו קצה כפתור */
+  border-radius: 0 999px 999px 0;
   box-shadow: var(--shadow-card);
   writing-mode: vertical-rl;
   text-orientation: mixed;

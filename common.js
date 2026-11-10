@@ -458,6 +458,39 @@
     });
   }
 
+  /* ---------------- קולג דוגמניות נע בדף הבית (gsap) ---------------- */
+  function initHeroCollage() {
+    if (!window.gsap) return;
+    const collage = document.querySelector('.hero-collage');
+    if (!collage || collage.dataset.rcCollageInit === '1') return;
+    collage.dataset.rcCollageInit = '1';
+    const rows = collage.querySelectorAll('.collage-row-inner');
+    if (!rows.length) return;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+    const SPEED = 30; /* פיקסלים לשנייה - תנועה עדינה ואיטית */
+    rows.forEach((row) => {
+      const dir = row.closest('.collage-row')?.dataset.dir === 'right' ? 1 : -1;
+      const halfWidth = row.scrollWidth / 2;
+      if (!halfWidth) return;
+      gsap.fromTo(row, { xPercent: 0 }, {
+        xPercent: dir * 50,
+        duration: halfWidth / SPEED,
+        ease: 'none',
+        repeat: -1,
+      });
+    });
+    /* "גדילה" עדינה - כל תמונה נושמת בקנה מידה משלה, עם דיליי אקראי כדי שלא יזוזו יחד */
+    gsap.to(collage.querySelectorAll('.collage-tile img'), {
+      scale: 1.1,
+      duration: 3.6,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+      stagger: { each: 0.1, from: 'random' },
+    });
+  }
+
   window.RacheliModals = { open: openModal, close: closeAllModals };
   window.RacheliCommon = {
     mountRail, mountLogo, mountFooter, mountModals,
@@ -471,6 +504,7 @@
     initMiscLikeButtons: initMiscLikeButtons,
     initRevealAnimations: initRevealAnimations,
     mountSideCta: mountSideCta,
+    initHeroCollage: initHeroCollage,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -1395,5 +1429,6 @@
     initHeadingEffects();
     initMiscLikeButtons();
     initRevealAnimations();
+    initHeroCollage();
   });
 })();
