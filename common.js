@@ -617,6 +617,8 @@
     initRevealAnimations: initRevealAnimations,
     mountSideCta: mountSideCta,
     initHeroCollage: initHeroCollage,
+    renderFeedList: function () { renderFeedList(); },
+    renderBrideJourney: function () { renderBrideJourney(); },
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -661,6 +663,25 @@
       { type: 'image', src: 'assets/home_hero.jpg', caption: 'הפרטים הקטנים שהופכים פאה לבלתי מזוהה' },
     ] },
   ];
+  /* ---------------- תוכן הפיד (דף "פיד") - ניתן לניהול דרך האדמין, בדיוק כמו הסטוריז ---------------- */
+  const DEFAULT_FEED_POSTS = [
+    { id: 'feed-1', type: 'image', src: 'assets/feed_card1.jpg', caption: 'טיפוח יומיומי לפאה', views: 220, ctaLabel: 'קביעת פגישה' },
+    { id: 'feed-2', type: 'image', src: 'assets/feed_card2.jpg', caption: 'מבנה ודילול נכון', views: 184, ctaLabel: 'קביעת פגישה' },
+    { id: 'feed-3', type: 'image', src: 'assets/feed_card3.jpg', caption: 'שילוב גוונים טבעי', views: 312, ctaLabel: 'קביעת פגישה' },
+    { id: 'feed-4', type: 'image', src: 'assets/feed_card4.jpg', caption: 'תנועה טבעית בפאה', views: 275, ctaLabel: 'קביעת פגישה' },
+  ];
+  let FEED_POSTS = DEFAULT_FEED_POSTS;
+
+  /* ---------------- קרוסלת "אני כלה" (סרטוני/תמונות כלה) - ניתנת לניהול דרך האדמין ---------------- */
+  const DEFAULT_BRIDE_JOURNEY = [
+    { id: 'bride-j-1', type: 'image', src: 'assets/journey_side.jpg', caption: 'נושא?' },
+    { id: 'bride-j-2', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה אני רואה כשאני מסתכלת על פאה?' },
+    { id: 'bride-j-3', type: 'image', src: 'assets/journey_center.jpg', showStats: true, likeId: 'bride-story-1', views: 220, active: true },
+    { id: 'bride-j-4', type: 'image', src: 'assets/journey_side.jpg', caption: 'לא כל פאה יפה היא הפאה המדויקת עבורך' },
+    { id: 'bride-j-5', type: 'image', src: 'assets/journey_side.jpg', caption: 'אותה השראה. שתי פאות שונות.' },
+  ];
+  let BRIDE_JOURNEY = DEFAULT_BRIDE_JOURNEY;
+
   const STORY_DURATION = 5000;
   const VIDEO_FALLBACK_DURATION = 8000;
   let TOPICS = DEFAULT_TOPICS;
@@ -740,7 +761,32 @@
         });
       } catch (e) {}
     }
-    return { getTopics, setTopics, putMedia, getMedia, deleteMedia, DEFAULT_TOPICS };
+    /* פונקציות גנריות לאחסון כל סוג תוכן (לא רק סטוריז) באותו ה-object-store, לפי מפתח -
+       בשימוש עבור הפיד ("feed") וקרוסלת "אני כלה" ("bride_journey") */
+    async function getContent(key) {
+      try {
+        const db = await openDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction('content', 'readonly');
+          const req = tx.objectStore('content').get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) { return null; }
+    }
+    async function setContent(key, data) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('content', 'readwrite');
+        tx.objectStore('content').put(data, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    return {
+      getTopics, setTopics, putMedia, getMedia, deleteMedia, getContent, setContent,
+      DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY,
+    };
   })();
   window.RacheliStore = RCStore;
 
@@ -816,7 +862,53 @@
       return await assetsCap.upload(file, options);
     }
 
-    return { init, getDb, getAssets, getUser, fetchTopics, subscribeTopics, seedIfEmpty, saveLabel, saveSlides, uploadFile };
+    /* ---- גרסה גנרית של אותם פעולות, לכל אוסף (collection) - בשימוש עבור "feed" ו-"bride_journey" ---- */
+    async function fetchCollection(name) {
+      if (!dbCap) return null;
+      try {
+        const snap = await dbCap.collection(name).get();
+        if (!snap || !snap.docs || !snap.docs.length) return null;
+        return fromDocs(snap.docs);
+      } catch (e) { return null; }
+    }
+    function subscribeCollection(name, cb) {
+      if (!dbCap) return function () {};
+      try {
+        return dbCap.collection(name).onSnapshot(
+          function (snap) { cb(fromDocs(snap.docs)); },
+          function () { /* transient/terminal errors: keep last known data */ }
+        );
+      } catch (e) { return function () {}; }
+    }
+    async function seedCollectionIfEmpty(name, defaults) {
+      if (!dbCap) return;
+      const existing = await fetchCollection(name);
+      if (existing && existing.length) return;
+      for (let i = 0; i < defaults.length; i++) {
+        const item = Object.assign({}, defaults[i]);
+        const id = item.id;
+        delete item.id;
+        item.order = i;
+        try { await dbCap.doc(name + '/' + id).set(item); } catch (e) { /* best-effort seed */ }
+      }
+    }
+    async function saveDoc(name, id, data) {
+      if (!dbCap) throw new Error('no-db');
+      await dbCap.doc(name + '/' + id).set(data);
+    }
+    async function updateDoc(name, id, patch) {
+      if (!dbCap) throw new Error('no-db');
+      await dbCap.doc(name + '/' + id).update(patch);
+    }
+    async function deleteDoc(name, id) {
+      if (!dbCap) throw new Error('no-db');
+      await dbCap.doc(name + '/' + id).delete();
+    }
+
+    return {
+      init, getDb, getAssets, getUser, fetchTopics, subscribeTopics, seedIfEmpty, saveLabel, saveSlides, uploadFile,
+      fetchCollection, subscribeCollection, seedCollectionIfEmpty, saveDoc, updateDoc, deleteDoc,
+    };
   })();
   window.RacheliCloud = RCCloud;
 
@@ -875,6 +967,150 @@
     } catch (e) {}
     TOPICS = DEFAULT_TOPICS;
   }
+
+  /* הופך רשימה "שטוחה" של פריטים (לא מקוננת כמו topic.slides) שמכילה mediaId מקומי ל-object URL בר-תצוגה -
+     משמש גם לפיד וגם לקרוסלת "אני כלה" כשהן נטענות מהאחסון המקומי (IndexedDB) של האתר הסטטי */
+  async function hydrateMediaList(list) {
+    const clone = JSON.parse(JSON.stringify(list));
+    for (const item of clone) {
+      if (item.mediaId) {
+        const blob = await RCStore.getMedia(item.mediaId);
+        if (blob) item.src = URL.createObjectURL(blob);
+      }
+    }
+    return clone;
+  }
+
+  let feedUnsub = null;
+  async function loadFeed() {
+    if (window.RC_SPA) {
+      try {
+        await RCCloud.init();
+        const db = RCCloud.getDb();
+        if (db) {
+          await RCCloud.seedCollectionIfEmpty('feed', DEFAULT_FEED_POSTS);
+          const cloudFeed = await RCCloud.fetchCollection('feed');
+          FEED_POSTS = (cloudFeed && cloudFeed.length) ? cloudFeed : DEFAULT_FEED_POSTS;
+          if (feedUnsub) feedUnsub();
+          feedUnsub = RCCloud.subscribeCollection('feed', function (list) {
+            if (list && list.length) { FEED_POSTS = list; renderFeedList(); }
+          });
+          return;
+        }
+      } catch (e) {}
+      FEED_POSTS = DEFAULT_FEED_POSTS;
+      return;
+    }
+    try {
+      const stored = await RCStore.getContent('feed');
+      if (stored && Array.isArray(stored) && stored.length) {
+        FEED_POSTS = await hydrateMediaList(stored);
+        return;
+      }
+    } catch (e) {}
+    FEED_POSTS = DEFAULT_FEED_POSTS;
+  }
+
+  let brideUnsub = null;
+  async function loadBrideJourney() {
+    if (window.RC_SPA) {
+      try {
+        await RCCloud.init();
+        const db = RCCloud.getDb();
+        if (db) {
+          await RCCloud.seedCollectionIfEmpty('bride_journey', DEFAULT_BRIDE_JOURNEY);
+          const cloudList = await RCCloud.fetchCollection('bride_journey');
+          BRIDE_JOURNEY = (cloudList && cloudList.length) ? cloudList : DEFAULT_BRIDE_JOURNEY;
+          if (brideUnsub) brideUnsub();
+          brideUnsub = RCCloud.subscribeCollection('bride_journey', function (list) {
+            if (list && list.length) { BRIDE_JOURNEY = list; renderBrideJourney(); }
+          });
+          return;
+        }
+      } catch (e) {}
+      BRIDE_JOURNEY = DEFAULT_BRIDE_JOURNEY;
+      return;
+    }
+    try {
+      const stored = await RCStore.getContent('bride_journey');
+      if (stored && Array.isArray(stored) && stored.length) {
+        BRIDE_JOURNEY = await hydrateMediaList(stored);
+        return;
+      }
+    } catch (e) {}
+    BRIDE_JOURNEY = DEFAULT_BRIDE_JOURNEY;
+  }
+
+  function mediaItemSrc(item) {
+    if (!item) return '';
+    if (item.src) return item.src;
+    if (item.assetId) return '/_blob/' + item.assetId;
+    return '';
+  }
+
+  const EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg>';
+  const CALENDAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 10h16"/></svg>';
+
+  /* בונה את רשימת כרטיסי הפיד (דף "פיד") מתוך FEED_POSTS - מריץ מחדש בכל טעינת תוכן (מקומית/ענן) */
+  function renderFeedList() {
+    const wrap = document.getElementById('feed-list');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    FEED_POSTS.forEach((post) => {
+      const article = document.createElement('article');
+      article.className = 'feed-card';
+      const media = post.type === 'video'
+        ? `<video src="${escapeAttrC(mediaItemSrc(post))}" muted playsinline loop autoplay></video><span class="feed-video-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>וידאו</span>`
+        : `<img src="${escapeAttrC(mediaItemSrc(post))}" alt="${escapeAttrC(post.caption || '')}">`;
+      article.innerHTML = `
+        ${media}
+        <div class="feed-stats">
+          <span class="feed-stat feed-views">${EYE_SVG}${post.views || 0}</span>
+          <button type="button" class="feed-stat feed-like" data-like-id="${escapeAttrC(post.id)}" aria-pressed="false" aria-label="אהבתי">${HEART_SVG}<span>אהבתי</span></button>
+          <button type="button" class="feed-stat feed-cta" data-open-modal="appointment" data-context-label="${escapeAttrC(post.caption || '')}">${CALENDAR_SVG}<span>${escapeAttrC(post.ctaLabel || 'קביעת פגישה')}</span></button>
+        </div>
+        ${post.caption ? `<div class="feed-caption">${escapeAttrC(post.caption)}</div>` : ''}
+      `;
+      wrap.appendChild(article);
+    });
+    if (window.RacheliCommon && window.RacheliCommon.initMiscLikeButtons) window.RacheliCommon.initMiscLikeButtons();
+  }
+
+  /* בונה את כרטיסי קרוסלת "אני כלה" מתוך BRIDE_JOURNEY - מריץ מחדש בכל טעינת תוכן, ואז מפעיל/מרענן
+     מחדש את לוגיקת הקרוסלה (journey.js) כדי שתזהה את הכרטיסים החדשים */
+  function renderBrideJourney() {
+    const wrap = document.getElementById('story-cards-bride');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    let activeSet = false;
+    BRIDE_JOURNEY.forEach((slide) => {
+      const card = document.createElement('div');
+      card.className = 'story-card' + (slide.active ? ' active' : '');
+      if (slide.active) activeSet = true;
+      const media = slide.type === 'video'
+        ? `<video src="${escapeAttrC(mediaItemSrc(slide))}" muted playsinline loop autoplay></video>`
+        : `<img src="${escapeAttrC(mediaItemSrc(slide))}" alt="">`;
+      if (slide.showStats) {
+        card.innerHTML = `
+          ${media}
+          <div class="story-stats">
+            <span class="story-stat">${EYE_SVG} ${slide.views || 0}</span>
+            <button type="button" class="story-stat story-like" data-like-id="${escapeAttrC(slide.likeId || slide.id)}" aria-pressed="false" aria-label="אהבתי">${HEART_SVG} <span>אהבתי</span></button>
+            <button type="button" class="story-stat" data-open-modal="appointment">${CALENDAR_SVG} <span>קביעת פגישה</span></button>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `${media}${slide.caption ? `<p class="story-caption">${escapeAttrC(slide.caption)}</p>` : ''}`;
+      }
+      wrap.appendChild(card);
+    });
+    if (!activeSet && wrap.firstElementChild) wrap.firstElementChild.classList.add('active');
+    if (window.RacheliCommon && window.RacheliCommon.initMiscLikeButtons) window.RacheliCommon.initMiscLikeButtons();
+    if (window.RCJourney && window.RCJourney.init) window.RCJourney.init();
+  }
+
+  function escapeAttrC(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
   function applyRingSegments() {
     document.querySelectorAll('.topic[data-topic]').forEach(function (el) {
@@ -1626,10 +1862,17 @@
     mountFooter();
     mountModals();
     mountSideCta();
+    /* רינדור ראשוני סינכרוני עם ברירות המחדל - כדי שהפיד/קרוסלת "אני כלה" יופיעו מיד, בלי הבהוב ריק,
+       עד שהתוכן האמיתי (מקומי/ענן) ייטען ויחליף אותן אם שונה */
+    renderFeedList();
+    renderBrideJourney();
     await loadTopics();
     mountStoryViewer();
     applyRingSegments();
     renderLikedVideosGrid();
+    await Promise.all([loadFeed(), loadBrideJourney()]);
+    renderFeedList();
+    renderBrideJourney();
     initHeadingEffects();
     initMiscLikeButtons();
     initRevealAnimations();

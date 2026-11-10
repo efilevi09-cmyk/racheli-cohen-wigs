@@ -33,8 +33,40 @@
       אני יכולה לעזור להקים את זה כשתרצי.
     </div>
 
-    <div class="admin-topics" id="admin-topics">
-      <p class="admin-loading">טוען תוכן…</p>
+    <div class="admin-tabs" role="tablist">
+      <button type="button" class="admin-tab active" data-admin-tab="stories" role="tab" aria-selected="true">סטוריז (העיגולים)</button>
+      <button type="button" class="admin-tab" data-admin-tab="feed" role="tab" aria-selected="false">פיד</button>
+      <button type="button" class="admin-tab" data-admin-tab="bride" role="tab" aria-selected="false">אני כלה</button>
+    </div>
+
+    <div class="admin-panel" data-admin-panel="stories">
+      <div class="admin-topics" id="admin-topics">
+        <p class="admin-loading">טוען תוכן…</p>
+      </div>
+    </div>
+
+    <div class="admin-panel" data-admin-panel="feed" hidden>
+      <div class="admin-section-head">
+        <div>
+          <h2>ניהול הפיד</h2>
+          <p>הוספה, עריכה, שינוי סדר ומחיקה של כרטיסי הפיד שמופיעים בדף "פיד" באתר.</p>
+        </div>
+      </div>
+      <div id="admin-feed">
+        <p class="admin-loading">טוען תוכן…</p>
+      </div>
+    </div>
+
+    <div class="admin-panel" data-admin-panel="bride" hidden>
+      <div class="admin-section-head">
+        <div>
+          <h2>ניהול קרוסלת "אני כלה"</h2>
+          <p>הוספה, עריכה, שינוי סדר ומחיקה של התמונות/סרטונים שמופיעים בקרוסלה בדף "אני כלה".</p>
+        </div>
+      </div>
+      <div id="admin-bride">
+        <p class="admin-loading">טוען תוכן…</p>
+      </div>
     </div>
 
     <div class="admin-save-bar">

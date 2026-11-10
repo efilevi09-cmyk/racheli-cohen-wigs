@@ -114,8 +114,52 @@
   margin-top: 20px;
 }
 
+/* ---------------- טאבים בין סוגי התוכן (סטוריז / פיד / אני כלה) ---------------- */
+.admin-tabs {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 0;
+}
+.admin-tab {
+  font-family: var(--font-ui); font-size: 14.5px; font-weight: 600; color: var(--gray-text);
+  background: none; border: none; border-bottom: 2.5px solid transparent;
+  padding: 10px 6px 12px; cursor: pointer; transition: color .18s ease, border-color .18s ease;
+}
+.admin-tab:hover { color: var(--black); }
+.admin-tab.active { color: var(--rose-2); border-bottom-color: var(--rose-1); }
+.admin-panel[hidden] { display: none; }
+.admin-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+.admin-section-head h2 { font-family: var(--font-display); font-size: 19px; color: var(--black); }
+.admin-section-head p { color: var(--gray-text); font-size: 13px; margin-top: 3px; max-width: 480px; }
+
+/* ---------------- שורות פריט "שטוחות" לפיד ולקרוסלת "אני כלה" (לא מקוננות תחת טופיק) ---------------- */
+.admin-flat-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.admin-flat-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 14px; box-shadow: var(--shadow-soft);
+}
+.admin-flat-reorder { display: flex; flex-direction: column; gap: 4px; padding-top: 4px; }
+.admin-flat-reorder button {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: var(--white);
+  color: var(--gray-text); cursor: pointer; display: grid; place-items: center; font-size: 13px;
+  transition: background .15s ease, color .15s ease;
+}
+.admin-flat-reorder button:hover:not(:disabled) { background: var(--rose-1); color: var(--white); border-color: transparent; }
+.admin-flat-reorder button:disabled { opacity: .3; cursor: not-allowed; }
+.admin-flat-fields { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.admin-flat-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.admin-num-input {
+  width: 90px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+  font-family: var(--font-ui); font-size: 13px; color: var(--black);
+}
+.admin-num-input:focus { outline: none; border-color: var(--rose-1); }
+.admin-check-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--black); cursor: pointer; }
+.admin-check-label input { accent-color: var(--rose-1); width: 15px; height: 15px; }
+
 @media (max-width: 560px) {
   .admin-head { flex-direction: column; }
   .admin-slide { flex-direction: column; }
   .admin-slide-media { width: 100%; height: 160px; }
+  .admin-flat-item { flex-direction: column; }
+  .admin-flat-reorder { flex-direction: row; }
 }
