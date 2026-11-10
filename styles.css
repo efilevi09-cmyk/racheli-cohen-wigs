@@ -198,10 +198,10 @@ h1, h2, h3, h4 {
   position: absolute; inset: -8% -4%;
   display: grid;
   grid-auto-flow: dense;
-  grid-template-columns: repeat(16, 1fr);
-  grid-auto-rows: clamp(44px, 4.6vw, 68px);
-  gap: clamp(6px, .9vw, 13px);
-  background: linear-gradient(160deg, #1c0f09 0%, #2a150d 45%, #110a07 100%);
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: clamp(62px, 6.4vw, 96px);
+  gap: clamp(7px, 1vw, 14px);
+  background: linear-gradient(160deg, #3a1220 0%, #4a1826 45%, #2c0e18 100%);
   transform: rotate(-4deg) scale(1.2);
   transform-origin: center;
   will-change: transform;
@@ -211,19 +211,20 @@ h1, h2, h3, h4 {
   position: relative;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: rgba(10,5,4,.6);
-  box-shadow: 0 14px 34px -12px rgba(0,0,0,.6);
+  background: rgba(30,10,16,.5);
+  box-shadow: 0 14px 34px -12px rgba(0,0,0,.55);
 }
 .collage-tile.sz-w2 { grid-column: span 2; }
 .collage-tile.sz-h2 { grid-row: span 2; }
-/* object-fit: cover - ממלא את כל האריח בלי מרווחים/פסים ריקים בין התמונות
-   blend-mode luminosity + שקיפות קלה - התמונות "נטמעות" בגוון הכהה של הרקע במקום לשבת עליו כתמונות
-   מלאות-עוצמה, כך שהקולג נרגע ומתמזג גם בלי overlay כהה מדי */
+/* object-fit: cover עם הטיית object-position כלפי מעלה - כך שבתמונות דיוקן (פנים) הקאדר לא
+   חותך את הפרצוף גם באריחים מוארכים/נמוכים. blend-mode luminosity + שקיפות קלה - התמונות
+   "נטמעות" בגוון הרקע במקום לשבת עליו כתמונות מלאות-עוצמה */
 .collage-tile img {
   width: 100%; height: 100%;
   object-fit: cover;
+  object-position: 50% 22%;
   display: block;
-  opacity: .8;
+  opacity: .85;
   mix-blend-mode: luminosity;
   transform-origin: center;
   will-change: transform;
@@ -231,13 +232,14 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   .collage-tile img { animation: none !important; transition: none !important; }
 }
-/* overlay כפול - כהות חזקה יותר, עם הטמעת luminosity של התמונות עצמן זה כבר לא "בולע" אותן */
+/* overlay ורוד-חמים ובהיר יותר, עם ריכוז כהות רק מאחורי הטקסט/כפתורים (הציר התחתון) כדי
+   שהטקסט לא "יבלע" - אבל השטח הכללי מרגיש מואר ולא שחור */
 .hero-overlay {
   position: absolute; inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 73% 58% at 50% 72%, rgba(6,3,2,.92) 0%, rgba(6,3,2,.68) 45%, rgba(6,3,2,.05) 74%),
-    linear-gradient(180deg, rgba(6,3,2,.76) 0%, rgba(6,3,2,.5) 28%, rgba(6,3,2,.54) 60%, rgba(6,3,2,.88) 100%);
+    radial-gradient(ellipse 78% 62% at 50% 76%, rgba(42,13,22,.9) 0%, rgba(42,13,22,.62) 46%, rgba(42,13,22,.04) 76%),
+    linear-gradient(180deg, rgba(224,148,160,.4) 0%, rgba(167,84,99,.28) 26%, rgba(96,34,47,.3) 56%, rgba(44,13,21,.8) 100%);
   pointer-events: none;
 }
 .hero-content {
@@ -283,56 +285,25 @@ h1, h2, h3, h4 {
 .topic:hover { transform: translateY(-2px); }
 .topic:active { transform: translateY(0) scale(.96); }
 .topic:focus-visible .topic-ring { outline: 2px solid var(--rose-1); outline-offset: 3px; }
+/* עיגול פשוט עם מסגרת דקה - אותו סגנון בדיוק כמו העיגולים בתוך הסטורי (igstory-topic-avatar) ובלוגו
+   בהאדר, בלי טבעת צבעונית מסתובבת */
 .topic-ring {
   width: 74px; height: 74px; border-radius: 50%;
-  position: relative;
   overflow: hidden;
-  isolation: isolate;
+  border: 1.5px solid rgba(0,0,0,.16);
+  transition: border-color .2s ease;
 }
-.topic-ring::before {
-  content: "";
-  position: absolute;
-  inset: -35%;
-  background: conic-gradient(from 0deg,
-    var(--rose-1), var(--rose-2), #f3c66b, var(--rose-1), var(--rose-2), #f3c66b, var(--rose-1));
-  animation: ring-spin 5s linear infinite;
-  will-change: transform;
-}
-@keyframes ring-spin {
-  to { transform: rotate(360deg); }
-}
+body[data-page="home"] .topic-ring { border-color: rgba(255,255,255,.6); }
 .topic-ring-in {
-  position: absolute; inset: 3px; z-index: 1;
-  border-radius: 50%; background: var(--white); padding: 2px;
-  display: flex;
-}
-/* מספר הפסים בטבעת הסטורי מתאים לכמות הפריטים בטופיק (--seg-count נקבע ב-JS) */
-.topic-ring.has-segments::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  width: 100%; height: 100%;
   border-radius: 50%;
-  background: repeating-conic-gradient(
-    from calc(-180deg / var(--seg-count, 1)),
-    var(--white) 0deg 7deg,
-    transparent 7deg calc(360deg / var(--seg-count, 1))
-  );
-  animation: ring-spin 5s linear infinite;
-  will-change: transform;
-  pointer-events: none;
-}
-.topic.seen .topic-ring.has-segments::after { animation: none; }
-@media (prefers-reduced-motion: reduce) {
-  .topic-ring.has-segments::after { animation: none; }
+  display: flex;
 }
 .topic-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
 .topic span { font-size: 14px; font-weight: 500; color: var(--black); text-align: center; }
 body[data-page="home"] .topic span { color: var(--white); text-shadow: 0 1px 4px rgba(0,0,0,.4); }
-.topic.seen .topic-ring::before { animation: none; background: var(--gray-bg); }
-@media (prefers-reduced-motion: reduce) {
-  .topic-ring::before { animation: none; background: var(--gradient); }
-}
+.topic.seen .topic-ring { border-color: rgba(0,0,0,.1); }
+body[data-page="home"] .topic.seen .topic-ring { border-color: rgba(255,255,255,.3); }
 
 /* ---------- journeys row (overlaid on the hero image) ---------- */
 .journeys {
@@ -496,8 +467,8 @@ footer.site-footer .links { display: flex; gap: 18px; }
 
   /* קולג הדוגמניות במובייל - פחות עמודות כדי שכל אריח יהיה גדול וברור, פחות הטיה */
   .hero-collage {
-    grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: clamp(48px, 11vw, 76px);
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: clamp(58px, 13vw, 88px);
     transform: rotate(-3deg) scale(1.22);
     gap: 8px;
   }

@@ -463,10 +463,11 @@
   /* ---------------- קולג א-סימטרי של כל הדוגמניות בדף הבית (gsap) ---------------- */
   /* 25 תמונות הדוגמניות שהועלו - מקור יחיד לאמת לכל שימושי הקולג */
   const MODEL_IMAGES = Array.from({ length: 25 }, (_, i) => `assets/model_${String(i + 1).padStart(2, '0')}.jpg`);
-  /* דפוס גדלים חוזר שיוצר תחושה לא-סימטרית: רוב האריחים קטנים (1x1), חלק מוארכים, ומעטים גדולים - בלי שום סדר צפוי */
+  /* דפוס גדלים חוזר שיוצר תחושה לא-סימטרית: רוב האריחים קטנים (1x1), חלק מוארכים, ומעטים גדולים - בלי שום סדר צפוי.
+     מעט פחות שילובי 2x2 (sz-w2 sz-h2) מאשר קודם - קאדר כזה חותך פרצופים בצורה קיצונית מדי */
   const COLLAGE_SPAN_PATTERN = [
-    '', '', 'sz-w2', '', 'sz-h2', '', '', 'sz-w2 sz-h2', '', '',
-    'sz-h2', '', 'sz-w2', '', '', '', 'sz-h2', '', 'sz-w2', '',
+    '', '', 'sz-w2', '', 'sz-h2', '', '', '', '', 'sz-w2',
+    'sz-h2', '', '', '', '', '', 'sz-h2', '', 'sz-w2', '',
     '', 'sz-w2 sz-h2', '', 'sz-h2', '', '', 'sz-w2', '', '', '',
   ];
   function shuffled(arr) {
@@ -477,31 +478,40 @@
     }
     return a;
   }
-  /* בונה רצף תמונות ארוך מספיק למילוי מלא של הרשת בכל גודל מסך, בלי ששתי אריחים צמודים יציגו את אותה תמונה */
+  /* בונה רצף תמונות ארוך מספיק למילוי מלא של הרשת בכל גודל מסך, כשאותה תמונה לא חוזרת בטווח קרוב
+     (לא רק הצמוד הישיר) - כדי שלא יהיה רושם של "אותה תמונה שוב ושוב לידה" גם ברשת צפופה */
   function buildCollageSequence(count) {
     const seq = [];
+    const noRepeatWindow = Math.min(8, MODEL_IMAGES.length - 1);
     let pool = shuffled(MODEL_IMAGES);
     let idx = 0;
+    let guard = 0;
     while (seq.length < count) {
       if (idx >= pool.length) { pool = shuffled(MODEL_IMAGES); idx = 0; }
       const next = pool[idx++];
-      if (next === seq[seq.length - 1]) continue; /* מונע חזרה צמודה של אותה תמונה */
+      const recent = seq.slice(-noRepeatWindow);
+      if (recent.includes(next)) {
+        guard++;
+        if (guard < MODEL_IMAGES.length * 2) continue; /* מונע חזרה בטווח הקרוב */
+      }
+      guard = 0;
       seq.push(next);
     }
     return seq;
   }
   /* מחשב כמה אריחים צריך כדי שהרשת תתמלא לגמרי בפועל, לפי הגובה/רוחב האמיתיים של הקולג במסך הזה -
-     כך שלעולם לא יישאר "חור" ריק בתחתית הדף הבית, גם במסכים גבוהים/רחבים מאוד */
+     כך שלעולם לא יישאר "חור" ריק בתחתית הדף הבית, גם במסכים גבוהים/רחבים מאוד. אריחים גדולים יותר
+     (ר' styles.css) אומרים פחות אריחים נדרשים בסה"כ - וזה גם מצמצם תחושת חזרתיות של 25 התמונות */
   function computeTileTarget(collage) {
     const rect = collage.getBoundingClientRect();
     const isMobile = window.matchMedia && window.matchMedia('(max-width: 860px)').matches;
-    const cols = isMobile ? 7 : 16;
-    const rowUnit = isMobile ? 46 : 42; /* מעט קטן מהמינימום האמיתי ב-CSS, בכוונה - כדי להעריך ביתר שאת */
+    const cols = isMobile ? 6 : 12;
+    const rowUnit = isMobile ? 58 : 60; /* מעט קטן מהמינימום האמיתי ב-CSS, בכוונה - כדי להעריך ביתר שאת */
     const estRows = Math.ceil((rect.height || window.innerHeight * 1.2) / rowUnit) + 3;
     const totalCells = cols * estRows;
     /* דורשים אריח אחד לכל תא ברשת (הערכת-יתר מכוונת: חלק מהאריחים תופסים 2-4 תאים בפועל, כך
        שתמיד ייצא עודף תמונות על פני השטח הדרוש, ולא חוסר שישאיר "חור" ריק) */
-    return Math.max(40, Math.min(totalCells, 280));
+    return Math.max(28, Math.min(totalCells, 150));
   }
   function initHeroCollage() {
     const collage = document.getElementById('hero-collage') || document.querySelector('.hero-collage');
