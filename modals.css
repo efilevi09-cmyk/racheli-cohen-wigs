@@ -302,9 +302,10 @@
   display: flex; align-items: center; justify-content: center; gap: 6px;
   width: 100%; padding: 0 12px;
 }
-/* קבוצת פריקים בכל צד - עד SIDE_PEEK_MAX סטוריז קרובים, כולם באותו גודל בדיוק כמו הכרטיס האמצעי
-   ובאותו מרחק (gap) קבוע וצר בין כולם. כמה בפועל מוצגים נקבע ב-JS (igUpdateSidePeek) לפי כמה נכנסים
-   בלי חפיפה - חייב להתאים בדיוק לערך ה-gap שם */
+/* קבוצת פריקים בכל צד - עד SIDE_PEEK_MAX סטוריז קרובים (כרגע 5), קטנים משמעותית מהכרטיס האמצעי
+   כדי שכולם באמת ייכנסו גם במסך רגיל. הרוחב של כל אריח מחושב דינמית ב-JS (igUpdateSidePeek) כך
+   שתמיד ישאפו להציג SIDE_PEEK_MAX אריחים בכל צד - הגובה נגזר אוטומטית לפי אותו יחס כמו הכרטיס
+   (aspect-ratio), ובמרחק (gap) קבוע וצר - חייב להתאים בדיוק לערך ה-gap ב-JS */
 .igstory-side-group {
   display: none;
   align-items: center; gap: 6px;
@@ -315,13 +316,13 @@
 #igstory-side-prev { justify-content: flex-end; }
 #igstory-side-next { justify-content: flex-start; }
 .igstory-side {
-  width: min(92vw, 400px); height: min(60vh, 560px);
+  width: 64px; aspect-ratio: 400 / 560; max-height: 100%;
   flex-shrink: 0;
-  border-radius: 20px; overflow: hidden;
+  border-radius: 14px; overflow: hidden;
   opacity: .5; filter: saturate(.65);
   background-size: cover; background-position: center;
   cursor: pointer;
-  transition: opacity .2s ease;
+  transition: opacity .2s ease, width .15s ease;
 }
 .igstory-side:hover { opacity: .78; }
 .igstory-card-wrap { flex: 0 0 auto; z-index: 1; }

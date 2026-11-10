@@ -896,9 +896,10 @@
     }
   }
 
-  /* מספר אריחי ה"פריק" המרבי שנבנים בכל צד - כמה מהם בפועל מוצגים נקבע דינמית לפי הרוחב הפנוי
-     (ר' igUpdateSidePeek), אבל בונים כאן מספיק אריחים מראש כדי שגם מסכים ענקיים יתמלאו */
-  const SIDE_PEEK_MAX = 8;
+  /* מספר אריחי ה"פריק" היעד בכל צד - תמיד שואפים להציג בדיוק כך הרבה (ר' igUpdateSidePeek), שמקטין
+     דינמית את רוחב האריחים כדי שכולם ייכנסו גם במסך רגיל; רק אם ממש אין מקום גם בגודל המינימלי,
+     מוצגים פחות */
+  const SIDE_PEEK_MAX = 5;
   function sidePeekTilesHTML(prefix) {
     const order = prefix === 'prev'
       ? Array.from({ length: SIDE_PEEK_MAX }, (_, i) => SIDE_PEEK_MAX - i)
@@ -1344,9 +1345,12 @@
     }
   }
 
-  /* כמה אריחי "פריק" (סטוריז נוספים בצדדים) נכנסים בפועל בלי חפיפה - כל אריח תמיד באותו גודל בדיוק
-     כמו הכרטיס האמצעי, במרחק (gap) שווה בין כולם, כך שמחשבים לפי הרוחב הפנוי כמה שלמים נכנסים.
-     בונים עד SIDE_PEEK_MAX אריחים כדי שגם במסכים ענקיים יהיה מספיק תוכן למלא את השטח */
+  /* כמה אריחי "פריק" (סטוריז נוספים בצדדים) מוצגים בכל צד, ובאיזה רוחב - תמיד שואפים להציג
+     בדיוק SIDE_PEEK_MAX אריחים, ולשם כך מקטינים את הרוחב של כל אריח (בין MIN ל-MAX, בגובה
+     שנגזר אוטומטית לפי אותו יחס רוחב/גובה כמו הכרטיס האמצעי, דרך aspect-ratio ב-CSS) כדי שכולם
+     באמת ייכנסו בלי חפיפה. רק אם אין מספיק מקום גם ברוחב המינימלי מוצג פחות מ-SIDE_PEEK_MAX */
+  const SIDE_TILE_MIN = 56;
+  const SIDE_TILE_MAX = 160;
   function igUpdateSidePeek() {
     const card = document.getElementById('igstory-card');
     const main = document.querySelector('.igstory-main');
@@ -1356,13 +1360,15 @@
     const gap = 6;
     const mainWidth = main.getBoundingClientRect().width;
     const sidePerGroup = Math.max(0, (mainWidth - cardRect.width) / 2 - gap);
-    const count = Math.max(0, Math.min(SIDE_PEEK_MAX, Math.floor((sidePerGroup + gap) / (cardRect.width + gap))));
+    const idealTileWidth = (sidePerGroup - (SIDE_PEEK_MAX - 1) * gap) / SIDE_PEEK_MAX;
+    const tileWidth = Math.max(SIDE_TILE_MIN, Math.min(SIDE_TILE_MAX, idealTileWidth));
+    const count = Math.max(0, Math.min(SIDE_PEEK_MAX, Math.floor((sidePerGroup + gap) / (tileWidth + gap))));
     for (let i = 1; i <= SIDE_PEEK_MAX; i++) {
       const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
       const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
       const show = i <= count;
-      if (elPrev) elPrev.style.display = show ? '' : 'none';
-      if (elNext) elNext.style.display = show ? '' : 'none';
+      if (elPrev) { elPrev.style.display = show ? '' : 'none'; if (show) elPrev.style.width = tileWidth + 'px'; }
+      if (elNext) { elNext.style.display = show ? '' : 'none'; if (show) elNext.style.width = tileWidth + 'px'; }
     }
   }
   let igSidePeekResizeTimer = null;
