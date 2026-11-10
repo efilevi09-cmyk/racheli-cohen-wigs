@@ -576,6 +576,17 @@
       repeat: -1,
       stagger: { each: 0.15, from: 'random' },
     });
+    /* תנועה עדינה שבה כל אריח "צף" לאט כלפי מעלה וחוזר - משך ודיליי אקראיים לכל אריח כדי שהקיר ירגיש חי ולא מסונכרן */
+    tiles.forEach((tile) => {
+      gsap.to(tile, {
+        y: -(6 + Math.random() * 10),
+        duration: 3 + Math.random() * 3,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 2,
+      });
+    });
   }
 
   window.RacheliModals = { open: openModal, close: closeAllModals };
@@ -1319,7 +1330,7 @@
     if (strip.dataset.rcBuilt !== String(TOPICS.length)) {
       strip.innerHTML = TOPICS.map((t, i) => `
         <button type="button" class="igstory-topic-chip" data-topic-idx="${i}" aria-label="${t.label}">
-          <span class="topic-ring"><span class="topic-ring-in"><img src="${slideDisplaySrc(t.slides[0])}" alt=""></span></span>
+          <span class="igstory-topic-avatar"><img src="${slideDisplaySrc(t.slides[0])}" alt=""></span>
           <span class="igstory-topic-chip-label">${t.label}</span>
         </button>`).join('');
       strip.dataset.rcBuilt = String(TOPICS.length);
