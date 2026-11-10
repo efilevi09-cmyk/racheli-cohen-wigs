@@ -1341,6 +1341,33 @@
     }
   }
 
+  /* כמה אריחי "פריק" (סטוריז נוספים בצדדים) נכנסים בפועל בלי חפיפה - כל אריח תמיד באותו גודל בדיוק
+     כמו הכרטיס האמצעי, במרחק (gap) שווה בין כולם, כך שמחשבים לפי הרוחב הפנוי כמה שלמים נכנסים */
+  function igUpdateSidePeek() {
+    const card = document.getElementById('igstory-card');
+    const main = document.querySelector('.igstory-main');
+    if (!card || !main) return;
+    const cardRect = card.getBoundingClientRect();
+    if (!cardRect.width) return;
+    const gap = 20;
+    const mainWidth = main.getBoundingClientRect().width;
+    const sidePerGroup = Math.max(0, (mainWidth - cardRect.width) / 2 - gap);
+    const count = Math.max(0, Math.min(4, Math.floor((sidePerGroup + gap) / (cardRect.width + gap))));
+    for (let i = 1; i <= 4; i++) {
+      const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
+      const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
+      const show = i <= count && (elPrev ? !!elPrev.style.backgroundImage : false);
+      if (elPrev) elPrev.style.display = show ? '' : 'none';
+      if (elNext) elNext.style.display = show ? '' : 'none';
+    }
+  }
+  let igSidePeekResizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('igstory-overlay') || !document.getElementById('igstory-overlay').classList.contains('open')) return;
+    clearTimeout(igSidePeekResizeTimer);
+    igSidePeekResizeTimer = setTimeout(igUpdateSidePeek, 150);
+  });
+
   function igRender() {
     const topic = currentTopic();
     const slide = currentSlide();
@@ -1359,23 +1386,20 @@
     likeBtn.classList.toggle('liked', liked);
     likeBtn.querySelector('span').textContent = liked ? 'אהבתי!' : 'אהבתי';
 
-    /* פס הצדדים מציג כעת עד 4 סטוריז קרובים בכל כיוון (לא רק הקודם/הבא הצמוד) - כך שהשטח משני צדי
-       הכרטיס תמיד מתמלא בעוד ועוד סרטוני סטורי אמיתיים, בלי שום רווח ריק, גם במסכים רחבים מאוד */
+    /* פס הצדדים מציג עד 4 סטוריז קרובים בכל כיוון, כולם באותו גודל בדיוק כמו הכרטיס האמצעי ובמרחק
+       שווה (ר' igUpdateSidePeek) - כמה מהם בפועל נראים תלוי כמה נכנסים ברוחב המסך בלי חפיפה */
     const n = TOPICS.length;
-    const maxTier = Math.min(4, Math.floor((n - 1) / 2));
     for (let i = 1; i <= 4; i++) {
       const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
       const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
-      if (i <= maxTier) {
+      if (i <= Math.floor((n - 1) / 2)) {
         const pTopic = TOPICS[(igTopicIndex - i + n * 10) % n];
         const nTopic = TOPICS[(igTopicIndex + i) % n];
-        if (elPrev) { elPrev.style.backgroundImage = `url('${slideDisplaySrc(pTopic.slides[0])}')`; elPrev.style.display = ''; }
-        if (elNext) { elNext.style.backgroundImage = `url('${slideDisplaySrc(nTopic.slides[0])}')`; elNext.style.display = ''; }
-      } else {
-        if (elPrev) elPrev.style.display = 'none';
-        if (elNext) elNext.style.display = 'none';
+        if (elPrev) elPrev.style.backgroundImage = `url('${slideDisplaySrc(pTopic.slides[0])}')`;
+        if (elNext) elNext.style.backgroundImage = `url('${slideDisplaySrc(nTopic.slides[0])}')`;
       }
     }
+    igUpdateSidePeek();
 
     igRenderProgress();
     igRenderTopicsStrip();
