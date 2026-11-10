@@ -185,40 +185,30 @@ h1, h2, h3, h4 {
   background: rgba(0,0,0,0.38);
 }
 
-/* ---------- hero collage (קולג דוגמניות נע, רקע לדף הבית) ---------- */
+/* ---------- hero collage (קולג א-סימטרי של דוגמניות, רקע לדף הבית) ---------- */
+/* רשת גריד עם packing צפוף (dense) - האריחים משתנים בגודל (ר' .sz-w2/.sz-h2 ב-common.js) כך שהקולג
+   תמיד יוצא לא-סימטרי ותמיד מתמלא לגמרי, גם אם הרשת גדולה יותר ממספר התמונות בפועל (יש מחזוריות ב-JS) */
 .hero-collage {
   position: absolute; inset: -8% -4%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(10px, 1.6vw, 20px);
-  background: linear-gradient(160deg, #2a1812 0%, #3a2016 45%, #1d100c 100%);
-  transform: rotate(-4deg) scale(1.18);
+  display: grid;
+  grid-auto-flow: dense;
+  grid-template-columns: repeat(16, 1fr);
+  grid-auto-rows: clamp(44px, 4.6vw, 68px);
+  gap: clamp(6px, .9vw, 13px);
+  background: linear-gradient(160deg, #1c0f09 0%, #2a150d 45%, #110a07 100%);
+  transform: rotate(-4deg) scale(1.2);
   transform-origin: center;
   will-change: transform;
-}
-.collage-row {
-  flex: 1 1 0;
-  min-height: 0;
   overflow: hidden;
-  width: 100%;
-}
-.collage-row-inner {
-  display: flex;
-  align-items: stretch;
-  gap: clamp(10px, 1.6vw, 20px);
-  height: 100%;
-  width: max-content;
-  will-change: transform;
 }
 .collage-tile {
-  flex: 0 0 auto;
-  width: clamp(92px, 10.5vw, 152px);
-  height: 100%;
+  position: relative;
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 14px 34px -12px rgba(0,0,0,.55);
+  box-shadow: 0 14px 34px -12px rgba(0,0,0,.6);
 }
+.collage-tile.sz-w2 { grid-column: span 2; }
+.collage-tile.sz-h2 { grid-row: span 2; }
 .collage-tile img {
   width: 100%; height: 100%;
   object-fit: cover;
@@ -227,15 +217,15 @@ h1, h2, h3, h4 {
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
-  .collage-row-inner, .collage-tile img { animation: none !important; transition: none !important; }
+  .collage-tile img { animation: none !important; transition: none !important; }
 }
-/* overlay כפול - כהות אחידה לקריאות + וינייטה רכה סביב הטקסט, מעל הקולג ומתחת לתוכן */
+/* overlay כפול חזק - כהות גבוהה לקריאות מלאה של הטקסט והכפתורים מעל הקולג, גם ברקע הכי בהיר */
 .hero-overlay {
   position: absolute; inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 70% 55% at 50% 72%, rgba(12,6,4,.78) 0%, rgba(12,6,4,.45) 45%, rgba(12,6,4,0) 72%),
-    linear-gradient(180deg, rgba(12,6,4,.56) 0%, rgba(12,6,4,.3) 30%, rgba(12,6,4,.34) 62%, rgba(12,6,4,.72) 100%);
+    radial-gradient(ellipse 72% 58% at 50% 72%, rgba(8,4,3,.9) 0%, rgba(8,4,3,.62) 45%, rgba(8,4,3,0) 74%),
+    linear-gradient(180deg, rgba(8,4,3,.7) 0%, rgba(8,4,3,.46) 28%, rgba(8,4,3,.5) 60%, rgba(8,4,3,.86) 100%);
   pointer-events: none;
 }
 .hero-content {
@@ -488,10 +478,14 @@ footer.site-footer .links { display: flex; gap: 18px; }
   .hero-content .eyebrow { font-size: clamp(19px, 5vw, 26px); }
   .hero-content h1 { font-size: clamp(27px, 7vw, 38px); }
 
-  /* קולג הדוגמניות במובייל - פחות הטיה, שורה אחת פחות כדי שהתמונות שנשארות יהיו גדולות וברורות */
-  .hero-collage { transform: rotate(-3deg) scale(1.22); gap: 10px; }
-  .collage-row:nth-child(4) { display: none; }
-  .collage-tile { width: 108px; border-radius: var(--radius-sm); }
+  /* קולג הדוגמניות במובייל - פחות עמודות כדי שכל אריח יהיה גדול וברור, פחות הטיה */
+  .hero-collage {
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: clamp(48px, 11vw, 76px);
+    transform: rotate(-3deg) scale(1.22);
+    gap: 8px;
+  }
+  .collage-tile { border-radius: var(--radius-sm); }
 
   /* הסטטוסים (נושאי הטיפים) - גלילה אופקית במקום שבירה לשורה חדשה, כך שרואים כמה שיותר בבת אחת */
   .topics-row {

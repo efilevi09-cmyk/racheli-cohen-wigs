@@ -111,9 +111,9 @@
     const holder = document.createElement('div');
     holder.innerHTML = `
       <div class="side-cta" id="site-side-cta">
-        <a href="#" data-open-modal="appointment">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="writing-mode:horizontal-tb"><path d="m9 18 6-6-6-6"/></svg>
-          קבעי פגישה
+        <a href="#" data-open-modal="appointment" aria-label="קביעת פגישה">
+          <span class="side-cta-icon">${svg('calendar')}</span>
+          <span class="side-cta-label">קבעי פגישה</span>
         </a>
       </div>`;
     const el = holder.firstElementChild;
@@ -458,36 +458,123 @@
     });
   }
 
-  /* ---------------- קולג דוגמניות נע בדף הבית (gsap) ---------------- */
+  /* ---------------- קולג א-סימטרי של כל הדוגמניות בדף הבית (gsap) ---------------- */
+  /* 25 תמונות הדוגמניות שהועלו - מקור יחיד לאמת לכל שימושי הקולג */
+  const MODEL_IMAGES = Array.from({ length: 25 }, (_, i) => `assets/model_${String(i + 1).padStart(2, '0')}.jpg`);
+  /* דפוס גדלים חוזר שיוצר תחושה לא-סימטרית: רוב האריחים קטנים (1x1), חלק מוארכים, ומעטים גדולים - בלי שום סדר צפוי */
+  const COLLAGE_SPAN_PATTERN = [
+    '', '', 'sz-w2', '', 'sz-h2', '', '', 'sz-w2 sz-h2', '', '',
+    'sz-h2', '', 'sz-w2', '', '', '', 'sz-h2', '', 'sz-w2', '',
+    '', 'sz-w2 sz-h2', '', 'sz-h2', '', '', 'sz-w2', '', '', '',
+  ];
+  function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  /* בונה רצף תמונות ארוך מספיק למילוי מלא של הרשת בכל גודל מסך, בלי ששתי אריחים צמודים יציגו את אותה תמונה */
+  function buildCollageSequence(count) {
+    const seq = [];
+    let pool = shuffled(MODEL_IMAGES);
+    let idx = 0;
+    while (seq.length < count) {
+      if (idx >= pool.length) { pool = shuffled(MODEL_IMAGES); idx = 0; }
+      const next = pool[idx++];
+      if (next === seq[seq.length - 1]) continue; /* מונע חזרה צמודה של אותה תמונה */
+      seq.push(next);
+    }
+    return seq;
+  }
+  /* מחשב כמה אריחים צריך כדי שהרשת תתמלא לגמרי בפועל, לפי הגובה/רוחב האמיתיים של הקולג במסך הזה -
+     כך שלעולם לא יישאר "חור" ריק בתחתית הדף הבית, גם במסכים גבוהים/רחבים מאוד */
+  function computeTileTarget(collage) {
+    const rect = collage.getBoundingClientRect();
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 860px)').matches;
+    const cols = isMobile ? 7 : 16;
+    const rowUnit = isMobile ? 46 : 42; /* מעט קטן מהמינימום האמיתי ב-CSS, בכוונה - כדי להעריך ביתר שאת */
+    const estRows = Math.ceil((rect.height || window.innerHeight * 1.2) / rowUnit) + 3;
+    const totalCells = cols * estRows;
+    /* דורשים אריח אחד לכל תא ברשת (הערכת-יתר מכוונת: חלק מהאריחים תופסים 2-4 תאים בפועל, כך
+       שתמיד ייצא עודף תמונות על פני השטח הדרוש, ולא חוסר שישאיר "חור" ריק) */
+    return Math.max(40, Math.min(totalCells, 280));
+  }
   function initHeroCollage() {
-    if (!window.gsap) return;
-    const collage = document.querySelector('.hero-collage');
+    const collage = document.getElementById('hero-collage') || document.querySelector('.hero-collage');
     if (!collage || collage.dataset.rcCollageInit === '1') return;
     collage.dataset.rcCollageInit = '1';
-    const rows = collage.querySelectorAll('.collage-row-inner');
-    if (!rows.length) return;
+    const TILE_COUNT = computeTileTarget(collage);
+    const sequence = buildCollageSequence(TILE_COUNT);
+    const frag = document.createDocumentFragment();
+    sequence.forEach((src, i) => {
+      const spanClass = COLLAGE_SPAN_PATTERN[i % COLLAGE_SPAN_PATTERN.length];
+      const tile = document.createElement('div');
+      tile.className = 'collage-tile' + (spanClass ? ' ' + spanClass : '');
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = '';
+      img.loading = i < 10 ? 'eager' : 'lazy';
+      img.decoding = 'async';
+      tile.appendChild(img);
+      frag.appendChild(tile);
+    });
+    collage.appendChild(frag);
+    collage.dataset.rcTileCount = String(sequence.length);
+
+    /* אם המסך גדל משמעותית אחרי הטעינה (שינוי גודל חלון, סיבוב טאבלט) - מוסיפים עוד אריחים כדי שלא יישאר חור ריק */
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const need = computeTileTarget(collage);
+        const have = parseInt(collage.dataset.rcTileCount, 10) || 0;
+        if (need <= have * 1.1) return;
+        const extra = buildCollageSequence(need - have);
+        const extraFrag = document.createDocumentFragment();
+        extra.forEach((src, i) => {
+          const spanClass = COLLAGE_SPAN_PATTERN[(have + i) % COLLAGE_SPAN_PATTERN.length];
+          const tile = document.createElement('div');
+          tile.className = 'collage-tile' + (spanClass ? ' ' + spanClass : '');
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = '';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          tile.appendChild(img);
+          extraFrag.appendChild(tile);
+          if (window.gsap && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+            gsap.to(img, {
+              scale: 1.12, duration: 4.2, ease: 'sine.inOut', yoyo: true, repeat: -1,
+              delay: Math.random() * 1.5,
+            });
+          }
+        });
+        collage.appendChild(extraFrag);
+        collage.dataset.rcTileCount = String(need);
+      }, 400);
+    });
+
+    if (!window.gsap) return;
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) return;
-    const SPEED = 30; /* פיקסלים לשנייה - תנועה עדינה ואיטית */
-    rows.forEach((row) => {
-      const dir = row.closest('.collage-row')?.dataset.dir === 'right' ? 1 : -1;
-      const halfWidth = row.scrollWidth / 2;
-      if (!halfWidth) return;
-      gsap.fromTo(row, { xPercent: 0 }, {
-        xPercent: dir * 50,
-        duration: halfWidth / SPEED,
-        ease: 'none',
-        repeat: -1,
-      });
+    const tiles = collage.querySelectorAll('.collage-tile');
+    /* כניסה עדינה בטעינה - כל אריח נכנס בקנה מידה עם דיליי אקראי קטן */
+    gsap.fromTo(tiles, { opacity: 0, scale: 1.12 }, {
+      opacity: 1, scale: 1,
+      duration: 1.1,
+      ease: 'power2.out',
+      stagger: { each: 0.012, from: 'random' },
     });
-    /* "גדילה" עדינה - כל תמונה נושמת בקנה מידה משלה, עם דיליי אקראי כדי שלא יזוזו יחד */
+    /* "נשימה" עדינה ומתמשכת - כל תמונה גדלה ומתכווצת בקנה מידה משלה, עם דיליי אקראי כדי שלא יזוזו יחד */
     gsap.to(collage.querySelectorAll('.collage-tile img'), {
-      scale: 1.1,
-      duration: 3.6,
+      scale: 1.12,
+      duration: 4.2,
       ease: 'sine.inOut',
       yoyo: true,
       repeat: -1,
-      stagger: { each: 0.1, from: 'random' },
+      stagger: { each: 0.15, from: 'random' },
     });
   }
 
@@ -1232,8 +1319,8 @@
     if (strip.dataset.rcBuilt !== String(TOPICS.length)) {
       strip.innerHTML = TOPICS.map((t, i) => `
         <button type="button" class="igstory-topic-chip" data-topic-idx="${i}" aria-label="${t.label}">
-          <img src="${slideDisplaySrc(t.slides[0])}" alt="">
-          <span>${t.label}</span>
+          <span class="topic-ring"><span class="topic-ring-in"><img src="${slideDisplaySrc(t.slides[0])}" alt=""></span></span>
+          <span class="igstory-topic-chip-label">${t.label}</span>
         </button>`).join('');
       strip.dataset.rcBuilt = String(TOPICS.length);
       strip.querySelectorAll('[data-topic-idx]').forEach((btn) => {
