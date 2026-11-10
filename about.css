@@ -1,9 +1,9 @@
 /* ===== אודות (About) page ===== */
 
+/* ---------- הירו ---------- */
 .about-hero {
   position: relative;
-  padding: 50px 24px 20px;
-  text-align: center;
+  padding: 64px 24px 46px;
   overflow: hidden;
 }
 .about-hero::before {
@@ -12,26 +12,96 @@
   background: radial-gradient(70% 60% at 50% 0%, var(--pink-pale) 0%, #fff 70%);
   z-index: -1;
 }
-.about-hero-photo {
-  width: min(360px, 70vw);
+.about-hero-blob { top: -18px; left: 8%; transform: none; opacity: .75; }
+
+.about-hero-inner {
+  max-width: 980px;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 5vw, 64px);
 }
-.about-hero-photo img { width: 100%; }
-.about-hero h1 {
-  font-size: clamp(26px, 4vw, 34px);
-  margin-top: -10px;
+.about-hero-photo {
+  flex: 0 0 auto;
+  width: min(300px, 38vw);
+  position: relative;
 }
-.about-hero .role {
+.about-hero-photo::after {
+  content: "";
+  position: absolute; inset: -14px;
+  border: 1.5px solid var(--rose-1);
+  border-radius: var(--radius-lg);
+  opacity: .4;
+  z-index: -1;
+}
+.about-hero-photo img {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.about-hero-text { flex: 1 1 auto; text-align: start; }
+.about-eyebrow {
+  display: inline-block;
+  font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+  letter-spacing: .4px; color: var(--rose-2);
+  background: var(--white);
+  padding: 6px 16px; border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 16px;
+}
+.about-hero-text h1 {
+  font-size: clamp(34px, 5.2vw, 54px);
+  line-height: 1.08;
+}
+.about-hero-text .role {
   font-family: var(--font-ui);
   font-weight: 500;
   color: var(--rose-2);
   font-size: 15px;
-  margin-top: 4px;
+  margin-top: 8px;
+}
+.about-hero-lede {
+  margin-top: 18px;
+  font-size: 17px;
+  line-height: 1.65;
+  color: #2b2b2b;
+  max-width: 420px;
 }
 
+/* ---------- רצועת סטטיסטיקות ---------- */
+.about-stats {
+  max-width: 760px;
+  margin: 52px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.about-stat {
+  text-align: center;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 22px 12px;
+  box-shadow: var(--shadow-soft);
+}
+.about-stat strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 34px);
+  color: var(--rose-2);
+  line-height: 1;
+}
+.about-stat span {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  color: var(--gray-text);
+}
+
+/* ---------- בלוקי טקסט ---------- */
 .about-block {
   max-width: 900px;
-  margin: 70px auto;
+  margin: 86px auto;
   padding: 0 24px;
   text-align: center;
 }
@@ -48,6 +118,7 @@
   margin-inline: auto;
 }
 
+/* ---------- קולאז' ---------- */
 .about-collage {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -55,22 +126,76 @@
   max-width: 760px;
   margin: 40px auto 0;
 }
+.about-collage div {
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+}
 .about-collage img {
   width: 100%;
   aspect-ratio: 3/4;
   object-fit: cover;
-  border-radius: 24px;
-  box-shadow: var(--shadow-card);
+  display: block;
+  transition: transform .5s ease;
 }
+.about-collage div:hover img { transform: scale(1.06); }
 .about-collage div:nth-child(2) { margin-top: 28px; }
 .about-collage div:nth-child(3) { margin-top: -14px; }
 
-.about-cta {
+/* ---------- ציטוט ---------- */
+.about-quote {
+  position: relative;
+  max-width: 680px;
+  margin: 90px auto;
+  padding: 0 24px;
   text-align: center;
-  padding: 10px 24px 80px;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 27px);
+  line-height: 1.5;
+  color: var(--black);
+}
+.about-quote-mark {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 64px;
+  line-height: .6;
+  color: var(--rose-1);
+  margin-bottom: 6px;
 }
 
-@media (max-width: 700px) {
+/* ---------- רצועת קריאה לפעולה ---------- */
+.about-cta-band {
+  position: relative;
+  max-width: 900px;
+  margin: 20px auto 80px;
+  padding: 64px 32px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--pink-pale) 0%, #fff 60%);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.about-cta-blob { top: -18px; left: 50%; transform: translateX(-50%); opacity: .8; }
+.about-cta-band h2 {
+  font-size: clamp(22px, 3vw, 28px);
+  margin-bottom: 12px;
+}
+.about-cta-band p {
+  font-size: 15px;
+  color: var(--gray-text);
+  max-width: 440px;
+  margin: 0 auto 28px;
+  line-height: 1.7;
+}
+
+@media (max-width: 760px) {
+  .about-hero-inner { flex-direction: column; text-align: center; }
+  .about-hero-text { text-align: center; }
+  .about-hero-lede { margin-inline: auto; }
+  .about-hero-photo { width: min(240px, 60vw); }
+  .about-stats { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .about-stat { padding: 16px 8px; }
   .about-collage { grid-template-columns: repeat(2, 1fr); max-width: 420px; }
   .about-collage div:nth-child(3) { display: none; }
+  .about-cta-band { padding: 48px 22px; margin: 20px 16px 60px; }
 }

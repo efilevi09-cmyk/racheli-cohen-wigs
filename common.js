@@ -103,6 +103,13 @@
   }
 
   /* ---------------- modals ---------------- */
+  /* מיפוי הקשר (journey) לפי עמוד, כדי שפופאפ קביעת הפגישה "יזהה על מה מדובר" */
+  const JOURNEY_CONTEXT_LABELS = {
+    bride: 'אני כלה',
+    'new-wig': 'מחפשת פאה חדשה',
+    'renew-wig': 'חולמת לחדש את הפאה שלי',
+  };
+
   function modalsHTML() {
     return `
     <div class="modal-overlay" id="modal-journey">
@@ -112,9 +119,9 @@
         <h3>לאיזה מסע תרצי להצטרף?</h3>
         <p class="sub">בחרי את התהליך שהכי מתאים לך עכשיו</p>
         <div class="journey-options">
-          <a class="btn-primary" href="${rcHref('new-wig')}">מחפשת פאה חדשה</a>
-          <a class="btn-primary" href="${rcHref('bride')}">אני כלה</a>
-          <a class="btn-primary" href="${rcHref('renew-wig')}">חולמת לחדש את הפאה שלי</a>
+          <a class="btn-primary" data-journey="new-wig" href="${rcHref('new-wig')}">מחפשת פאה חדשה</a>
+          <a class="btn-primary" data-journey="bride" href="${rcHref('bride')}">אני כלה</a>
+          <a class="btn-primary" data-journey="renew-wig" href="${rcHref('renew-wig')}">חולמת לחדש את הפאה שלי</a>
         </div>
       </div>
     </div>
@@ -124,6 +131,7 @@
         <button class="modal-close" data-close-modal>&times;</button>
         <div class="modal-photo"><img src="assets/popup_blob1.png" alt=""></div>
         <h3>בואי נתכנן<br>את הפאה הבאה שלך</h3>
+        <p class="sub apt-context-sub" id="apt-context-sub" hidden></p>
         <form id="appointment-form">
           <div class="field-row">
             <div class="field"><input type="tel" id="apt-phone" placeholder="טלפון:" required></div>
@@ -186,7 +194,7 @@
       const opener = e.target.closest('[data-open-modal]');
       if (opener) {
         e.preventDefault();
-        openModal(opener.dataset.openModal);
+        openModal(opener.dataset.openModal, { contextLabel: opener.dataset.contextLabel });
       }
       if (e.target.matches('[data-close-modal]') || e.target.classList.contains('modal-overlay')) {
         closeAllModals();
@@ -214,18 +222,20 @@
         const dateVal = document.getElementById('apt-date').value;
         const timeVal = document.getElementById('apt-time').value;
         const location = 'הסטודיו של רחלי כהן';
+        const context = window._rcAptContext || '';
 
         document.getElementById('thanks-name').textContent = name ? name : 'איזה';
 
         const dateLabel = formatHebDate(dateVal);
         const timeLabel = timeVal || 'לתיאום טלפוני';
+        const contextLine = context ? `<br>נושא הפגישה: ${context}` : '';
         document.getElementById('thanks-meta').innerHTML =
-          `הפגישה שלך עם רחלי<br>יום ותאריך: ${dateLabel} | שעה: ${timeLabel} | מיקום: ${location}`;
+          `הפגישה שלך עם רחלי<br>יום ותאריך: ${dateLabel} | שעה: ${timeLabel} | מיקום: ${location}${contextLine}`;
 
-        const calUrl = buildGoogleCalendarUrl({ name, phone, email, dateVal, timeVal, location });
+        const calUrl = buildGoogleCalendarUrl({ name, phone, email, dateVal, timeVal, location, context });
         document.getElementById('thanks-calendar').href = calUrl;
 
-        const summaryText = buildAppointmentSummary({ name, phone, email, dateLabel, timeLabel, location });
+        const summaryText = buildAppointmentSummary({ name, phone, email, dateLabel, timeLabel, location, context });
         const copyBtn = document.getElementById('thanks-copy');
         copyBtn.onclick = function () { copyText(summaryText); };
 
@@ -245,11 +255,11 @@
     return `יום ${days[d.getDay()]}, ${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`;
   }
 
-  function buildGoogleCalendarUrl({ name, phone, email, dateVal, timeVal, location }) {
+  function buildGoogleCalendarUrl({ name, phone, email, dateVal, timeVal, location, context }) {
     const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
     const text = encodeURIComponent('פגישה אצל רחלי כהן - יצרנית פאות' + (name ? ' | ' + name : ''));
     const details = encodeURIComponent(
-      `פגישה שנקבעה דרך האתר.\nשם: ${name || '—'}\nטלפון: ${phone || '—'}\nמייל: ${email || '—'}`
+      `פגישה שנקבעה דרך האתר.${context ? '\nנושא: ' + context : ''}\nשם: ${name || '—'}\nטלפון: ${phone || '—'}\nמייל: ${email || '—'}`
     );
     const loc = encodeURIComponent(location);
     let dates = '';
@@ -272,16 +282,18 @@
     return `${base}&text=${text}${dates}&details=${details}&location=${loc}`;
   }
 
-  function buildAppointmentSummary({ name, phone, email, dateLabel, timeLabel, location }) {
-    return [
-      'פגישה אצל רחלי כהן | יצרנית פאות',
+  function buildAppointmentSummary({ name, phone, email, dateLabel, timeLabel, location, context }) {
+    const lines = ['פגישה אצל רחלי כהן | יצרנית פאות'];
+    if (context) lines.push(`נושא: ${context}`);
+    lines.push(
       `שם: ${name || '—'}`,
       `טלפון: ${phone || '—'}`,
       `מייל: ${email || '—'}`,
       `תאריך: ${dateLabel}`,
       `שעה: ${timeLabel}`,
-      `מיקום: ${location}`,
-    ].join('\n');
+      `מיקום: ${location}`
+    );
+    return lines.join('\n');
   }
 
   async function copyText(text) {
@@ -314,7 +326,8 @@
     t._hideTimer = setTimeout(() => t.classList.remove('show'), 2400);
   }
 
-  function openModal(id) {
+  function openModal(id, opts) {
+    opts = opts || {};
     const el = document.getElementById('modal-' + id);
     if (el) el.classList.add('open');
     if (id === 'search') {
@@ -322,6 +335,22 @@
       renderSearchResults('');
       const input = document.getElementById('site-search-input');
       if (input) { input.value = ''; setTimeout(() => input.focus(), 50); }
+    }
+    if (id === 'appointment') {
+      const label = opts.contextLabel || JOURNEY_CONTEXT_LABELS[document.body.dataset.page] || '';
+      window._rcAptContext = label;
+      const sub = document.getElementById('apt-context-sub');
+      if (sub) {
+        if (label) { sub.hidden = false; sub.textContent = 'התאמה אישית למסע: ' + label; }
+        else { sub.hidden = true; sub.textContent = ''; }
+      }
+    }
+    if (id === 'journey') {
+      const label = opts.contextLabel || JOURNEY_CONTEXT_LABELS[document.body.dataset.page] || '';
+      const matchKey = Object.keys(JOURNEY_CONTEXT_LABELS).find((k) => JOURNEY_CONTEXT_LABELS[k] === label);
+      document.querySelectorAll('#modal-journey [data-journey]').forEach((a) => {
+        a.classList.toggle('is-suggested', !!matchKey && a.dataset.journey === matchKey);
+      });
     }
   }
   function closeAllModals() {
@@ -419,6 +448,8 @@
     toggleArticleSaved: toggleArticleSaved,
     initArticlesPage: initArticlesPage,
     initHeadingEffects: initHeadingEffects,
+    initMiscLikeButtons: initMiscLikeButtons,
+    initRevealAnimations: initRevealAnimations,
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -701,15 +732,19 @@
     return `
     <div class="igstory-overlay" id="igstory-overlay" role="dialog" aria-modal="true" aria-label="צפייה בסטורי">
       <div class="igstory-stage">
-        <div class="igstory-head">
-          <div class="igstory-logo"><div class="logo-mark">RC</div><span>RACHELI COHEN</span></div>
-          <button class="igstory-close" id="igstory-close" aria-label="סגירה">${svg('close')}</button>
-        </div>
-        <div class="igstory-progress" id="igstory-progress"></div>
         <div class="igstory-main">
           <div class="igstory-side" id="igstory-peek-prev"></div>
           <div class="igstory-card" id="igstory-card">
             <div class="igstory-media" id="igstory-media"></div>
+            <div class="igstory-progress" id="igstory-progress"></div>
+            <div class="igstory-head">
+              <div class="igstory-logo">
+                <div class="logo-mark">RC</div>
+                <span>RACHELI COHEN</span>
+                <span class="igstory-topic-tag" id="igstory-topic-tag"></span>
+              </div>
+              <button class="igstory-close" id="igstory-close" aria-label="סגירה">${svg('close')}</button>
+            </div>
             <button class="igstory-arrow igstory-arrow-prev" id="igstory-arrow-prev" aria-label="הסיפור הקודם">${svg('chevronR')}</button>
             <button class="igstory-arrow igstory-arrow-next" id="igstory-arrow-next" aria-label="הסיפור הבא">${svg('chevronL')}</button>
             <div class="igstory-tapzone igstory-tap-prev" data-tap="prev"></div>
@@ -724,6 +759,7 @@
           </div>
           <div class="igstory-side" id="igstory-peek-next"></div>
         </div>
+        <div class="igstory-topics-strip" id="igstory-topics-strip"></div>
       </div>
     </div>`;
   }
@@ -753,6 +789,66 @@
     if (nowSaved) set.add(id); else set.delete(id);
     saveSavedArticles(set);
     return nowSaved;
+  }
+
+  /* ---------------- כפתורי "אהבתי" כלליים (פיד + כרטיסי מסע) ---------------- */
+  function miscLikedSet() {
+    try { return new Set(JSON.parse(localStorage.getItem('rc-liked-misc') || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveMiscLiked(set) {
+    try { localStorage.setItem('rc-liked-misc', JSON.stringify([...set])); } catch (e) {}
+  }
+  function initMiscLikeButtons() {
+    document.querySelectorAll('[data-like-id]').forEach((btn) => {
+      if (btn.dataset.rcLikeBound === '1') return;
+      btn.dataset.rcLikeBound = '1';
+      const id = btn.dataset.likeId;
+      const label = btn.querySelector('span');
+      const setState = (liked) => {
+        btn.classList.toggle('liked', liked);
+        btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+        if (label) label.textContent = liked ? 'אהבתי!' : 'אהבתי';
+        const icon = btn.querySelector('svg');
+        if (icon) icon.setAttribute('fill', liked ? 'currentColor' : 'none');
+      };
+      setState(miscLikedSet().has(id));
+      btn.addEventListener('click', () => {
+        const nowLiked = !miscLikedSet().has(id);
+        if (nowLiked) {
+          rcEnsureGoogleSignedIn(() => {
+            const set = miscLikedSet();
+            set.add(id);
+            saveMiscLiked(set);
+            setState(true);
+            showToast('נשמר ל"אהבתי"!');
+          });
+        } else {
+          const set = miscLikedSet();
+          set.delete(id);
+          saveMiscLiked(set);
+          setState(false);
+        }
+      });
+    });
+  }
+
+  /* ---------------- אנימציות reveal בגלילה (GSAP + IntersectionObserver) ---------------- */
+  function initRevealAnimations() {
+    if (!window.gsap) return;
+    const els = Array.from(document.querySelectorAll('[data-reveal]')).filter((el) => el.dataset.rcRevealed !== '1');
+    if (!els.length) return;
+    gsap.set(els, { opacity: 0, y: 30 });
+    const show = (el) => {
+      if (el.dataset.rcRevealed === '1') return;
+      el.dataset.rcRevealed = '1';
+      gsap.to(el, { opacity: 1, y: 0, duration: 0.85, ease: 'power3.out' });
+    };
+    if (!('IntersectionObserver' in window)) { els.forEach(show); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => { if (entry.isIntersecting) { show(entry.target); io.unobserve(entry.target); } });
+    }, { threshold: 0.18, rootMargin: '0px 0px -60px 0px' });
+    els.forEach((el) => io.observe(el));
   }
 
   const ARTICLES = [
@@ -1016,11 +1112,13 @@
     const caption = document.getElementById('igstory-caption');
     const views = document.getElementById('igstory-views');
     const likeBtn = document.getElementById('igstory-like');
+    const topicTag = document.getElementById('igstory-topic-tag');
     if (!caption) return;
 
     igRenderMedia(slide);
     caption.textContent = slide.caption || '';
     views.textContent = 200 + (igTopicIndex * 7) + (igSlideIndex * 3) + 13;
+    if (topicTag) topicTag.textContent = topic.label;
 
     const liked = likedSet().has(slideKey(topic, igSlideIndex));
     likeBtn.classList.toggle('liked', liked);
@@ -1034,7 +1132,33 @@
     if (peekNext) peekNext.style.backgroundImage = `url('${slideDisplaySrc(nextTopic.slides[0])}')`;
 
     igRenderProgress();
+    igRenderTopicsStrip();
     igStartSegment();
+  }
+
+  /* רצועת כל נושאי הסטורי (לא רק הקודם/הבא), עם אפשרות לדלג ישירות לכל נושא */
+  function igRenderTopicsStrip() {
+    const strip = document.getElementById('igstory-topics-strip');
+    if (!strip) return;
+    if (strip.dataset.rcBuilt !== String(TOPICS.length)) {
+      strip.innerHTML = TOPICS.map((t, i) => `
+        <button type="button" class="igstory-topic-chip" data-topic-idx="${i}" aria-label="${t.label}">
+          <img src="${slideDisplaySrc(t.slides[0])}" alt="">
+          <span>${t.label}</span>
+        </button>`).join('');
+      strip.dataset.rcBuilt = String(TOPICS.length);
+      strip.querySelectorAll('[data-topic-idx]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          igGoToTopic(parseInt(btn.dataset.topicIdx, 10), 0);
+          igScheduleNext();
+        });
+      });
+    }
+    strip.querySelectorAll('.igstory-topic-chip').forEach((btn, i) => {
+      const isActive = i === igTopicIndex;
+      btn.classList.toggle('active', isActive);
+      if (isActive) btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    });
   }
 
   function igGoToTopic(topicIdx, slideIdx) {
@@ -1171,8 +1295,9 @@
     });
 
     document.getElementById('igstory-cta').addEventListener('click', () => {
+      const label = currentTopic().label;
       closeStoryViewer();
-      openModal('appointment');
+      openModal('appointment', { contextLabel: 'סטורי ' + label });
     });
 
     document.getElementById('igstory-overlay').addEventListener('click', (e) => {
@@ -1212,5 +1337,7 @@
     applyRingSegments();
     renderLikedVideosGrid();
     initHeadingEffects();
+    initMiscLikeButtons();
+    initRevealAnimations();
   });
 })();

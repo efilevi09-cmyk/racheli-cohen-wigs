@@ -38,8 +38,18 @@
   display: flex; flex-direction: column; gap: 16px; align-items: center;
   color: var(--white); font-size: 12px;
 }
-.feed-stats span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.feed-stats .feed-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: none; padding: 0; margin: 0;
+  font-family: inherit; font-size: inherit; color: inherit;
+  cursor: pointer; transition: transform .15s ease;
+}
+.feed-stats span.feed-stat { cursor: default; }
+.feed-stats button.feed-stat:hover { transform: scale(1.08); }
+.feed-stats button.feed-stat:active { transform: scale(.94); }
 .feed-stats svg { width: 24px; height: 24px; }
+.feed-like.liked svg { fill: #ff4d6d; stroke: #ff4d6d; }
+.feed-like.liked { color: #ff8fa3; }
 
 .feed-caption {
   position: absolute; bottom: 24px; right: 24px; left: 24px;
