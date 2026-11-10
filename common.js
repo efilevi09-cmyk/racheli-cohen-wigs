@@ -902,7 +902,9 @@
       <div class="igstory-stage">
         <div class="igstory-main">
           <div class="igstory-side-group" id="igstory-side-prev">
-            <div class="igstory-side igstory-side-far" id="igstory-peek-prev-2"></div>
+            <div class="igstory-side igstory-side-tier4" id="igstory-peek-prev-4"></div>
+            <div class="igstory-side igstory-side-tier3" id="igstory-peek-prev-3"></div>
+            <div class="igstory-side igstory-side-tier2" id="igstory-peek-prev-2"></div>
             <div class="igstory-side igstory-side-near" id="igstory-peek-prev"></div>
           </div>
           <div class="igstory-card-wrap">
@@ -934,7 +936,9 @@
           </div>
           <div class="igstory-side-group" id="igstory-side-next">
             <div class="igstory-side igstory-side-near" id="igstory-peek-next"></div>
-            <div class="igstory-side igstory-side-far" id="igstory-peek-next-2"></div>
+            <div class="igstory-side igstory-side-tier2" id="igstory-peek-next-2"></div>
+            <div class="igstory-side igstory-side-tier3" id="igstory-peek-next-3"></div>
+            <div class="igstory-side igstory-side-tier4" id="igstory-peek-next-4"></div>
           </div>
         </div>
       </div>
@@ -1355,23 +1359,23 @@
     likeBtn.classList.toggle('liked', liked);
     likeBtn.querySelector('span').textContent = liked ? 'אהבתי!' : 'אהבתי';
 
-    /* פס הצדדים מציג כעת שני סטוריז קרובים בכל כיוון (לא רק הקודם/הבא הצמוד) - כך שיש יותר תוכן אמיתי
-       ממלא את השטח משני צדי הכרטיס, במקום פאנל בודד שמתרחב */
+    /* פס הצדדים מציג כעת עד 4 סטוריז קרובים בכל כיוון (לא רק הקודם/הבא הצמוד) - כך שהשטח משני צדי
+       הכרטיס תמיד מתמלא בעוד ועוד סרטוני סטורי אמיתיים, בלי שום רווח ריק, גם במסכים רחבים מאוד */
     const n = TOPICS.length;
-    const prevTopic = TOPICS[(igTopicIndex - 1 + n) % n];
-    const prevTopic2 = TOPICS[(igTopicIndex - 2 + n) % n];
-    const nextTopic = TOPICS[(igTopicIndex + 1) % n];
-    const nextTopic2 = TOPICS[(igTopicIndex + 2) % n];
-    const peekPrev = document.getElementById('igstory-peek-prev');
-    const peekPrev2 = document.getElementById('igstory-peek-prev-2');
-    const peekNext = document.getElementById('igstory-peek-next');
-    const peekNext2 = document.getElementById('igstory-peek-next-2');
-    if (peekPrev) peekPrev.style.backgroundImage = `url('${slideDisplaySrc(prevTopic.slides[0])}')`;
-    if (peekPrev2 && n > 2) peekPrev2.style.backgroundImage = `url('${slideDisplaySrc(prevTopic2.slides[0])}')`;
-    if (peekNext) peekNext.style.backgroundImage = `url('${slideDisplaySrc(nextTopic.slides[0])}')`;
-    if (peekNext2 && n > 2) peekNext2.style.backgroundImage = `url('${slideDisplaySrc(nextTopic2.slides[0])}')`;
-    if (peekPrev2) peekPrev2.style.visibility = n > 2 ? '' : 'hidden';
-    if (peekNext2) peekNext2.style.visibility = n > 2 ? '' : 'hidden';
+    const maxTier = Math.min(4, Math.floor((n - 1) / 2));
+    for (let i = 1; i <= 4; i++) {
+      const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
+      const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
+      if (i <= maxTier) {
+        const pTopic = TOPICS[(igTopicIndex - i + n * 10) % n];
+        const nTopic = TOPICS[(igTopicIndex + i) % n];
+        if (elPrev) { elPrev.style.backgroundImage = `url('${slideDisplaySrc(pTopic.slides[0])}')`; elPrev.style.display = ''; }
+        if (elNext) { elNext.style.backgroundImage = `url('${slideDisplaySrc(nTopic.slides[0])}')`; elNext.style.display = ''; }
+      } else {
+        if (elPrev) elPrev.style.display = 'none';
+        if (elNext) elNext.style.display = 'none';
+      }
+    }
 
     igRenderProgress();
     igRenderTopicsStrip();
@@ -1484,10 +1488,12 @@
     document.getElementById('igstory-close').addEventListener('click', closeStoryViewer);
     document.getElementById('igstory-arrow-next').addEventListener('click', (e) => { e.stopPropagation(); igNext(); igScheduleNext(); });
     document.getElementById('igstory-arrow-prev').addEventListener('click', (e) => { e.stopPropagation(); igPrev(); igScheduleNext(); });
-    document.getElementById('igstory-peek-next').addEventListener('click', () => { igGoToTopic(igTopicIndex + 1, 0); igScheduleNext(); });
-    document.getElementById('igstory-peek-prev').addEventListener('click', () => { igGoToTopic(igTopicIndex - 1, 0); igScheduleNext(); });
-    document.getElementById('igstory-peek-next-2').addEventListener('click', () => { igGoToTopic(igTopicIndex + 2, 0); igScheduleNext(); });
-    document.getElementById('igstory-peek-prev-2').addEventListener('click', () => { igGoToTopic(igTopicIndex - 2, 0); igScheduleNext(); });
+    for (let i = 1; i <= 4; i++) {
+      const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
+      const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
+      if (elPrev) elPrev.addEventListener('click', () => { igGoToTopic(igTopicIndex - i, 0); igScheduleNext(); });
+      if (elNext) elNext.addEventListener('click', () => { igGoToTopic(igTopicIndex + i, 0); igScheduleNext(); });
+    }
 
     document.querySelectorAll('.igstory-tapzone').forEach((z) => {
       z.addEventListener('click', () => {

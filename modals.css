@@ -296,25 +296,42 @@
 @keyframes igstory-fill { from { width: 0%; } to { width: 100%; } }
 
 .igstory-main {
-  display: flex; align-items: center; justify-content: center; gap: 14px;
-  width: 100%; padding: 0 12px;
+  display: flex; align-items: center; justify-content: center; gap: 0;
+  width: 100%; padding: 0;
 }
-/* קבוצת פריקים בכל צד - לא פאנל בודד מתרחב, אלא שני סטוריז קרובים זה ליד זה (הבא-אחרי-הבא, ולא רק הצמוד)
-   כך שיש עוד תוכן אמיתי ממלא את השטח */
+/* קבוצת פריקים בכל צד - לא פאנל בודד מתרחב, אלא שרשרת סטוריז קרובים (עד 4 בכל כיוון) צמודים זה לזה
+   בלי שום רווח, שתמיד תופסת את כל השטח שנשאר עד קצה המסך - כך שאין אף פעם "חור" שחור ריק */
 .igstory-side-group {
   display: none;
-  align-items: center; gap: 8px;
+  align-items: center; gap: 0;
+  flex: 1 1 0%;
+  min-width: 0;
+  height: min(58vh, 500px);
+  overflow: hidden;
 }
 @media (min-width: 740px) { .igstory-side-group { display: flex; } }
+#igstory-side-prev { justify-content: flex-end; }
+#igstory-side-next { justify-content: flex-start; }
 .igstory-side {
-  width: clamp(80px, 11vw, 180px); height: min(58vh, 500px);
-  border-radius: 18px; overflow: hidden; flex-shrink: 0;
+  flex: 1 1 160px;
+  max-width: 220px;
+  min-width: 70px;
+  height: 100%;
+  overflow: hidden;
   opacity: .45; filter: saturate(.6);
   background-size: cover; background-position: center;
   cursor: pointer;
   transition: opacity .2s ease;
 }
 .igstory-side:hover { opacity: .7; }
+.igstory-side-tier2 { opacity: .34; }
+.igstory-side-tier3 { opacity: .25; }
+.igstory-side-tier4 { opacity: .18; }
+.igstory-card-wrap { flex: 0 0 auto; z-index: 1; }
+/* יותר שכבות סטוריז נחשפות ככל שיש יותר רוחב מסך פנוי - כדי שגם במסכים רחבים מאוד תמיד יהיה
+   עוד תוכן אמיתי שממלא את השטח, בלי אריחים צרים מדי במסכים בינוניים */
+@media (max-width: 1100px) { .igstory-side-tier3, .igstory-side-tier4 { display: none !important; } }
+@media (max-width: 1480px) { .igstory-side-tier4 { display: none !important; } }
 .igstory-side-far {
   width: clamp(64px, 8vw, 140px); height: min(48vh, 420px);
   opacity: .28; filter: saturate(.5) blur(.5px);
