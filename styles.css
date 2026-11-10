@@ -205,13 +205,15 @@ h1, h2, h3, h4 {
   position: relative;
   border-radius: var(--radius-md);
   overflow: hidden;
+  background: rgba(10,5,4,.6);
   box-shadow: 0 14px 34px -12px rgba(0,0,0,.6);
 }
 .collage-tile.sz-w2 { grid-column: span 2; }
 .collage-tile.sz-h2 { grid-row: span 2; }
+/* object-fit: contain - התמונה השלמה תמיד נראית, בלי חיתוך של הפנים/הראש בקצוות האריח */
 .collage-tile img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transform-origin: center;
   will-change: transform;
@@ -219,13 +221,14 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   .collage-tile img { animation: none !important; transition: none !important; }
 }
-/* overlay כפול חזק - כהות גבוהה לקריאות מלאה של הטקסט והכפתורים מעל הקולג, גם ברקע הכי בהיר */
+/* overlay כפול כהה מאוד - שכבה אחידה חזקה על כל הקולג (לא רק סביב הטקסט) כדי שהריכוז יישאר על
+   הכותרת והכפתורים ולא "יתפזר" בין עשרות התמונות שברקע */
 .hero-overlay {
   position: absolute; inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 72% 58% at 50% 72%, rgba(8,4,3,.9) 0%, rgba(8,4,3,.62) 45%, rgba(8,4,3,0) 74%),
-    linear-gradient(180deg, rgba(8,4,3,.7) 0%, rgba(8,4,3,.46) 28%, rgba(8,4,3,.5) 60%, rgba(8,4,3,.86) 100%);
+    radial-gradient(ellipse 75% 60% at 50% 72%, rgba(5,2,2,.95) 0%, rgba(5,2,2,.8) 45%, rgba(5,2,2,.18) 74%),
+    linear-gradient(180deg, rgba(5,2,2,.86) 0%, rgba(5,2,2,.72) 28%, rgba(5,2,2,.74) 60%, rgba(5,2,2,.94) 100%);
   pointer-events: none;
 }
 .hero-content {

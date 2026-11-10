@@ -192,12 +192,12 @@
   transform: translateY(-50%);
   z-index: 30;
 }
-/* כרית אייקון עגולה + תווית אופקית, צמודות לקצה המסך (שמאל) עם קצה ישר, והקצה הפנימי מעוגל לגמרי */
+/* כרית אייקון עגולה + תווית אופקית רחבה, צמודות לקצה המסך (שמאל) עם קצה ישר, והקצה הפנימי מעוגל לגמרי */
 .side-cta a {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 13px;
   background: var(--gradient);
-  color: var(--white); font-weight: 700; font-size: 14.5px; white-space: nowrap;
-  padding: 10px 22px 10px 10px;
+  color: var(--white); font-weight: 700; font-size: 17px; white-space: nowrap;
+  padding: 16px 34px 16px 14px;
   border-radius: 0 999px 999px 0;
   box-shadow: 0 16px 36px -14px rgba(0,0,0,.55), 0 3px 10px rgba(0,0,0,.2);
   transition: transform .3s cubic-bezier(.22,.8,.3,1), box-shadow .3s ease, padding .3s ease;
@@ -206,16 +206,16 @@
 .side-cta a:focus-visible {
   transform: translateX(4px);
   box-shadow: 0 20px 44px -12px rgba(0,0,0,.6), 0 3px 10px rgba(0,0,0,.22);
-  padding-left: 28px;
+  padding-left: 40px;
 }
 .side-cta-icon {
   flex-shrink: 0;
-  width: 32px; height: 32px;
+  width: 40px; height: 40px;
   border-radius: 50%;
   background: rgba(255,255,255,.22);
   display: grid; place-items: center;
 }
-.side-cta-icon svg { width: 16px; height: 16px; fill: none; stroke: var(--white); stroke-width: 2; }
+.side-cta-icon svg { width: 19px; height: 19px; fill: none; stroke: var(--white); stroke-width: 2; }
 .side-cta-label { padding-top: 1px; }
 
 @media (max-width: 860px) {
@@ -223,8 +223,8 @@
   .story-card img { height: 230px; }
   .story-card.active { width: 230px; }
   .story-card.active img { height: 330px; }
-  .side-cta { position: static; transform: none; display: flex; justify-content: center; margin: 24px 0; }
-  .side-cta a { border-radius: var(--radius-pill); padding: 10px 20px; }
+  .side-cta { position: static; transform: none; width: 100%; margin: 24px 0; }
+  .side-cta a { width: 100%; justify-content: center; border-radius: var(--radius-pill); padding: 15px 20px; }
 }
 
 /* ========================================================================
