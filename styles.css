@@ -289,15 +289,14 @@ h1, h2, h3, h4 {
 .topic:hover { transform: translateY(-2px); }
 .topic:active { transform: translateY(0) scale(.96); }
 .topic:focus-visible .topic-ring { outline: 2px solid var(--rose-1); outline-offset: 3px; }
-/* עיגול פשוט עם מסגרת דקה - אותו סגנון בדיוק כמו העיגולים בתוך הסטורי (igstory-topic-avatar) ובלוגו
-   בהאדר, בלי טבעת צבעונית מסתובבת */
+/* עיגול פשוט עם מסגרת ורודה - אותו סגנון בדיוק כמו העיגולים בתוך הסטורי (igstory-topic-avatar) ובלוגו
+   בהאדר (logo-mark), עם מסגרת הוורוד של המותג (--rose-1), בלי טבעת צבעונית מסתובבת */
 .topic-ring {
   width: 74px; height: 74px; border-radius: 50%;
   overflow: hidden;
-  border: 1.5px solid rgba(0,0,0,.16);
+  border: 1.5px solid var(--rose-1);
   transition: border-color .2s ease;
 }
-body[data-page="home"] .topic-ring { border-color: rgba(255,255,255,.6); }
 .topic-ring-in {
   width: 100%; height: 100%;
   border-radius: 50%;
