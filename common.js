@@ -1075,6 +1075,66 @@
       wrap.appendChild(article);
     });
     if (window.RacheliCommon && window.RacheliCommon.initMiscLikeButtons) window.RacheliCommon.initMiscLikeButtons();
+    initFeedVideoAutoSound();
+  }
+
+  /* ---------------- וידאו בפיד: הקול נדלק אוטומטית כשסרטון מגיע לתצוגה בגלילה ---------------- */
+  /* כל וידאו בפיד מתחיל מושתק (autoplay מושתק מותר תמיד בדפדפנים), ומרגע שהוא נכנס לתצוגה (רוב הכרטיס
+     נראה על המסך) מנסים להדליק לו קול. דפדפנים חוסמים לפעמים השמעה עם קול בלי "מחווה" ישירה של
+     המשתמשת בעמוד הנוכחי - אם זה קורה, חוזרים להשתקה ומחכים ללחיצה/געיעה ראשונה כדי לנסות שוב על
+     הסרטון שבתצוגה כרגע. בכל רגע נתון רק וידאו אחד (זה שבתצוגה) מושמע; כל השאר מושהים ומושתקים. */
+  let feedVideoObserver = null;
+  let feedAudioGestureBound = false;
+
+  function initFeedVideoAutoSound() {
+    const videos = Array.from(document.querySelectorAll('#feed-list .feed-card video'));
+    if (feedVideoObserver) { feedVideoObserver.disconnect(); feedVideoObserver = null; }
+    if (!videos.length) return;
+
+    function tryUnmutedPlay(video) {
+      video.muted = false;
+      const p = video.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(function () {
+          video.muted = true;
+          video.play().catch(function () {});
+          bindFirstGestureUnlock();
+        });
+      }
+    }
+
+    function bindFirstGestureUnlock() {
+      if (feedAudioGestureBound) return;
+      feedAudioGestureBound = true;
+      const unlock = function () {
+        feedAudioGestureBound = false;
+        const current = videos.find(function (v) { return v.dataset.rcInView === '1'; });
+        if (current) tryUnmutedPlay(current);
+      };
+      document.addEventListener('click', unlock, { once: true });
+      document.addEventListener('touchstart', unlock, { once: true, passive: true });
+    }
+
+    if (!('IntersectionObserver' in window)) {
+      videos.forEach(function (v) { v.muted = true; v.play().catch(function () {}); });
+      return;
+    }
+
+    feedVideoObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        const video = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+          video.dataset.rcInView = '1';
+          tryUnmutedPlay(video);
+        } else {
+          delete video.dataset.rcInView;
+          video.pause();
+          video.muted = true;
+        }
+      });
+    }, { threshold: [0, 0.6, 1] });
+
+    videos.forEach(function (v) { feedVideoObserver.observe(v); });
   }
 
   /* בונה את כרטיסי קרוסלת "אני כלה" מתוך BRIDE_JOURNEY - מריץ מחדש בכל טעינת תוכן, ואז מפעיל/מרענן
