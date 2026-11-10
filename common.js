@@ -896,16 +896,22 @@
     }
   }
 
+  /* מספר אריחי ה"פריק" המרבי שנבנים בכל צד - כמה מהם בפועל מוצגים נקבע דינמית לפי הרוחב הפנוי
+     (ר' igUpdateSidePeek), אבל בונים כאן מספיק אריחים מראש כדי שגם מסכים ענקיים יתמלאו */
+  const SIDE_PEEK_MAX = 8;
+  function sidePeekTilesHTML(prefix) {
+    const order = prefix === 'prev'
+      ? Array.from({ length: SIDE_PEEK_MAX }, (_, i) => SIDE_PEEK_MAX - i)
+      : Array.from({ length: SIDE_PEEK_MAX }, (_, i) => i + 1);
+    return order.map((i) => `<div class="igstory-side" id="igstory-peek-${prefix}${i === 1 ? '' : '-' + i}"></div>`).join('');
+  }
   function storyViewerHTML() {
     return `
     <div class="igstory-overlay" id="igstory-overlay" role="dialog" aria-modal="true" aria-label="צפייה בסטורי">
       <div class="igstory-stage">
         <div class="igstory-main">
           <div class="igstory-side-group" id="igstory-side-prev">
-            <div class="igstory-side igstory-side-tier4" id="igstory-peek-prev-4"></div>
-            <div class="igstory-side igstory-side-tier3" id="igstory-peek-prev-3"></div>
-            <div class="igstory-side igstory-side-tier2" id="igstory-peek-prev-2"></div>
-            <div class="igstory-side igstory-side-near" id="igstory-peek-prev"></div>
+            ${sidePeekTilesHTML('prev')}
           </div>
           <div class="igstory-card-wrap">
             <div class="igstory-topics-strip" id="igstory-topics-strip"></div>
@@ -935,10 +941,7 @@
             </div>
           </div>
           <div class="igstory-side-group" id="igstory-side-next">
-            <div class="igstory-side igstory-side-near" id="igstory-peek-next"></div>
-            <div class="igstory-side igstory-side-tier2" id="igstory-peek-next-2"></div>
-            <div class="igstory-side igstory-side-tier3" id="igstory-peek-next-3"></div>
-            <div class="igstory-side igstory-side-tier4" id="igstory-peek-next-4"></div>
+            ${sidePeekTilesHTML('next')}
           </div>
         </div>
       </div>
@@ -1342,21 +1345,22 @@
   }
 
   /* כמה אריחי "פריק" (סטוריז נוספים בצדדים) נכנסים בפועל בלי חפיפה - כל אריח תמיד באותו גודל בדיוק
-     כמו הכרטיס האמצעי, במרחק (gap) שווה בין כולם, כך שמחשבים לפי הרוחב הפנוי כמה שלמים נכנסים */
+     כמו הכרטיס האמצעי, במרחק (gap) שווה בין כולם, כך שמחשבים לפי הרוחב הפנוי כמה שלמים נכנסים.
+     בונים עד SIDE_PEEK_MAX אריחים כדי שגם במסכים ענקיים יהיה מספיק תוכן למלא את השטח */
   function igUpdateSidePeek() {
     const card = document.getElementById('igstory-card');
     const main = document.querySelector('.igstory-main');
     if (!card || !main) return;
     const cardRect = card.getBoundingClientRect();
     if (!cardRect.width) return;
-    const gap = 20;
+    const gap = 12;
     const mainWidth = main.getBoundingClientRect().width;
     const sidePerGroup = Math.max(0, (mainWidth - cardRect.width) / 2 - gap);
-    const count = Math.max(0, Math.min(4, Math.floor((sidePerGroup + gap) / (cardRect.width + gap))));
-    for (let i = 1; i <= 4; i++) {
+    const count = Math.max(0, Math.min(SIDE_PEEK_MAX, Math.floor((sidePerGroup + gap) / (cardRect.width + gap))));
+    for (let i = 1; i <= SIDE_PEEK_MAX; i++) {
       const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
       const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
-      const show = i <= count && (elPrev ? !!elPrev.style.backgroundImage : false);
+      const show = i <= count;
       if (elPrev) elPrev.style.display = show ? '' : 'none';
       if (elNext) elNext.style.display = show ? '' : 'none';
     }
@@ -1386,18 +1390,17 @@
     likeBtn.classList.toggle('liked', liked);
     likeBtn.querySelector('span').textContent = liked ? 'אהבתי!' : 'אהבתי';
 
-    /* פס הצדדים מציג עד 4 סטוריז קרובים בכל כיוון, כולם באותו גודל בדיוק כמו הכרטיס האמצעי ובמרחק
-       שווה (ר' igUpdateSidePeek) - כמה מהם בפועל נראים תלוי כמה נכנסים ברוחב המסך בלי חפיפה */
+    /* פס הצדדים מציג עד SIDE_PEEK_MAX סטוריז קרובים בכל כיוון, כולם באותו גודל בדיוק כמו הכרטיס
+       האמצעי ובמרחק שווה (ר' igUpdateSidePeek) - כמה מהם בפועל נראים תלוי כמה נכנסים ברוחב המסך
+       בלי חפיפה. אם יש פחות נושאים מ-SIDE_PEEK_MAX, הנושאים פשוט חוזרים על עצמם (תוכן דקורטיבי) */
     const n = TOPICS.length;
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= SIDE_PEEK_MAX; i++) {
       const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
       const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
-      if (i <= Math.floor((n - 1) / 2)) {
-        const pTopic = TOPICS[(igTopicIndex - i + n * 10) % n];
-        const nTopic = TOPICS[(igTopicIndex + i) % n];
-        if (elPrev) elPrev.style.backgroundImage = `url('${slideDisplaySrc(pTopic.slides[0])}')`;
-        if (elNext) elNext.style.backgroundImage = `url('${slideDisplaySrc(nTopic.slides[0])}')`;
-      }
+      const pTopic = TOPICS[(igTopicIndex - i + n * 10) % n];
+      const nTopic = TOPICS[(igTopicIndex + i) % n];
+      if (elPrev) elPrev.style.backgroundImage = `url('${slideDisplaySrc(pTopic.slides[0])}')`;
+      if (elNext) elNext.style.backgroundImage = `url('${slideDisplaySrc(nTopic.slides[0])}')`;
     }
     igUpdateSidePeek();
 
@@ -1512,7 +1515,7 @@
     document.getElementById('igstory-close').addEventListener('click', closeStoryViewer);
     document.getElementById('igstory-arrow-next').addEventListener('click', (e) => { e.stopPropagation(); igNext(); igScheduleNext(); });
     document.getElementById('igstory-arrow-prev').addEventListener('click', (e) => { e.stopPropagation(); igPrev(); igScheduleNext(); });
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= SIDE_PEEK_MAX; i++) {
       const elPrev = document.getElementById(i === 1 ? 'igstory-peek-prev' : `igstory-peek-prev-${i}`);
       const elNext = document.getElementById(i === 1 ? 'igstory-peek-next' : `igstory-peek-next-${i}`);
       if (elPrev) elPrev.addEventListener('click', () => { igGoToTopic(igTopicIndex - i, 0); igScheduleNext(); });

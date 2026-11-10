@@ -238,8 +238,11 @@
   display: none;
   align-items: center; justify-content: center;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
   opacity: 0; transition: opacity .25s ease;
 }
+.igstory-overlay::-webkit-scrollbar { display: none; }
 .igstory-overlay.open { display: flex; opacity: 1; }
 
 .igstory-stage {
@@ -296,14 +299,15 @@
 @keyframes igstory-fill { from { width: 0%; } to { width: 100%; } }
 
 .igstory-main {
-  display: flex; align-items: center; justify-content: center; gap: 20px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
   width: 100%; padding: 0 12px;
 }
-/* קבוצת פריקים בכל צד - עד 4 סטוריז קרובים, כולם באותו גודל בדיוק כמו הכרטיס האמצעי ובאותו מרחק
-   (gap) קבוע בין כולם. כמה בפועל מוצגים נקבע ב-JS (igUpdateSidePeek) לפי כמה נכנסים בלי חפיפה */
+/* קבוצת פריקים בכל צד - עד SIDE_PEEK_MAX סטוריז קרובים, כולם באותו גודל בדיוק כמו הכרטיס האמצעי
+   ובאותו מרחק (gap) קבוע וצר בין כולם. כמה בפועל מוצגים נקבע ב-JS (igUpdateSidePeek) לפי כמה נכנסים
+   בלי חפיפה - חייב להתאים בדיוק לערך ה-gap שם */
 .igstory-side-group {
   display: none;
-  align-items: center; gap: 20px;
+  align-items: center; gap: 12px;
   flex: 0 0 auto;
   height: min(60vh, 560px);
 }
