@@ -172,7 +172,7 @@
   margin-bottom: 28px;
   box-shadow: var(--shadow-card);
 }
-.article-single-media img { width: 100%; max-height: 420px; object-fit: cover; }
+.article-single-media img { width: 100%; max-height: 260px; object-fit: cover; }
 .article-single-body { font-size: 16.5px; line-height: 1.85; color: var(--black); }
 .article-single-body p { margin-bottom: 18px; }
 .article-single-body h2 {
