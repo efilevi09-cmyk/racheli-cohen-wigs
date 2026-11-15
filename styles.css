@@ -523,9 +523,11 @@ footer.site-footer .links { display: flex; gap: 18px; }
   }
   body.nav-open .icon-rail { transform: translateX(0); }
   .icon-rail a {
-    width: auto; height: auto; flex: 0 0 auto;
+    display: flex;
+    width: 100%; height: auto; flex: 0 0 auto;
     flex-direction: row-reverse;
     justify-content: flex-start;
+    align-items: center;
     gap: 14px;
     padding: 13px 14px;
     border-radius: var(--radius-sm);
