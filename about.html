@@ -21,22 +21,31 @@
     <div class="content">
       <main>
         <section class="about-hero">
-          <div class="deco-blob deco-blob--lg about-hero-blob"></div>
-          <div class="about-hero-inner">
-            <div class="about-hero-photo"><img src="assets/about_hero.png" alt="רחלי כהן"></div>
-            <div class="about-hero-text">
-              <span class="about-eyebrow">נעים להכיר</span>
-              <h1>רחלי כהן</h1>
-              <p class="role">יצרנית פאות</p>
-              <p class="about-hero-lede">שיער שנבחר בקפידה<br>פאה שנבנית בדיוק בשבילך</p>
+          <div class="about-hero-media">
+            <div class="about-hero-photo"><img src="assets/about_hero.png" alt="רחלי כהן, יצרנית פאות"></div>
+            <div class="about-badge" aria-hidden="true">
+              <svg viewBox="0 0 200 200">
+                <defs><path id="aboutBadgePath" d="M100,100 m-82,0 a82,82 0 1,1 164,0 a82,82 0 1,1 -164,0"/></defs>
+                <text>
+                  <textPath href="#aboutBadgePath" startOffset="0%">רחלי כהן ✦ יצרנית פאות ✦ מעל 14 שנות ניסיון ✦ </textPath>
+                </text>
+              </svg>
+              <div class="about-badge-core"><strong>+14</strong><span>שנה</span></div>
             </div>
           </div>
-          <div class="about-stats" data-reveal>
-            <div class="about-stat"><strong>+14</strong><span>שנות ניסיון</span></div>
-            <div class="about-stat"><strong>+500</strong><span>פאות שנוצרו</span></div>
-            <div class="about-stat"><strong>100%</strong><span>הקשבה אישית</span></div>
+          <div class="about-hero-text">
+            <span class="about-eyebrow"><i></i>נעים להכיר</span>
+            <h1 class="about-hero-title">רחלי כהן<br><span>יצרנית פאות</span></h1>
+            <p class="about-hero-lede">שיער שנבחר בקפידה<br>פאה שנבנית בדיוק בשבילך</p>
+            <a class="about-hero-cta" href="#" data-open-modal="appointment">קביעת פגישה <span>←</span></a>
           </div>
         </section>
+
+        <div class="about-stats" data-reveal>
+          <div class="about-stat"><strong>+14</strong><span>שנות ניסיון</span></div>
+          <div class="about-stat"><strong>+500</strong><span>פאות שנוצרו</span></div>
+          <div class="about-stat"><strong>100%</strong><span>הקשבה אישית</span></div>
+        </div>
 
         <section class="about-block" data-reveal>
           <h2>פאה טובה מתחילה הרבה לפני<br>שרואים את התוצאה.</h2>
@@ -51,11 +60,33 @@
           </p>
         </section>
 
-        <div class="about-collage" data-reveal>
-          <div><img src="assets/about_collage1.jpg" alt=""></div>
-          <div><img src="assets/about_collage2.png" alt=""></div>
-          <div><img src="assets/about_collage3.png" alt=""></div>
-        </div>
+        <section class="about-services" data-reveal>
+          <span class="about-eyebrow about-eyebrow--center"><i></i>שלושה דברים שאני מביאה לכל פאה</span>
+          <h2>לא רק ידיים שיודעות לבצע —<br>גם עין שיודעת לחבר בין הפרטים</h2>
+          <div class="about-services-grid">
+            <article class="service-card">
+              <img src="assets/about_collage1.jpg" alt="">
+              <div class="service-card-body">
+                <h3>הקשבה אישית</h3>
+                <p>להבין מה את מחפשת, לא רק מה ביקשת.</p>
+              </div>
+            </article>
+            <article class="service-card">
+              <img src="assets/about_collage2.png" alt="">
+              <div class="service-card-body">
+                <h3>ידע בייצור</h3>
+                <p>בנייה, דילול, צבע, נפח ותנועה שעובדים בהרמוניה.</p>
+              </div>
+            </article>
+            <article class="service-card">
+              <img src="assets/about_collage3.png" alt="">
+              <div class="service-card-body">
+                <h3>עין מקצועית</h3>
+                <p>לראות את התוצאה הסופית עוד לפני שהיא קיימת.</p>
+              </div>
+            </article>
+          </div>
+        </section>
 
         <blockquote class="about-quote" data-reveal>
           <span class="about-quote-mark">”</span>
@@ -75,11 +106,23 @@
           </p>
         </section>
 
-        <div class="about-collage" data-reveal>
-          <div><img src="assets/about_collage4.jpg" alt=""></div>
-          <div><img src="assets/about_collage1.jpg" alt=""></div>
-          <div><img src="assets/about_collage2.png" alt=""></div>
-        </div>
+        <section class="about-process" data-reveal>
+          <div class="about-process-text">
+            <span class="about-eyebrow"><i></i>התהליך</span>
+            <h2>מתחושת חיפוש<br>לביטחון מלא</h2>
+            <p>כל פגישה מתחילה בלא לדעת בדיוק מה יושב נכון, ומסתיימת ברגע שבו הכול מתחבר. גררי את הנקודה כדי להרגיש את ההבדל.</p>
+            <a class="about-process-cta" href="#" data-open-modal="journey">לכל מסלולי הפגישה <span>←</span></a>
+          </div>
+          <div class="about-compare" id="aboutCompare">
+            <img class="about-compare-img" src="assets/journey_side.jpg" alt="לפני הפגישה — תחושת חיפוש">
+            <div class="about-compare-after-wrap">
+              <img class="about-compare-img" src="assets/journey_center.jpg" alt="אחרי הפגישה — ביטחון מלא">
+            </div>
+            <span class="about-compare-tag about-compare-tag--before">לפני</span>
+            <span class="about-compare-tag about-compare-tag--after">אחרי</span>
+            <div class="about-compare-handle" id="aboutCompareHandle"><span></span></div>
+          </div>
+        </section>
 
         <section class="about-block" data-reveal>
           <h2>שיער איכותי. ידע בייצור.<br>עין שרואה את החיבור.</h2>
@@ -92,8 +135,30 @@
           </p>
         </section>
 
+        <div class="about-collage" data-reveal>
+          <div><img src="assets/about_collage4.jpg" alt=""></div>
+          <div><img src="assets/about_collage1.jpg" alt=""></div>
+          <div><img src="assets/about_collage2.png" alt=""></div>
+        </div>
+
+        <section class="about-gallery" data-reveal>
+          <div class="about-gallery-head">
+            <div>
+              <span class="about-eyebrow"><i></i>מהסטודיו</span>
+              <h2>רגעים מהעבודה<br>שלנו ביחד</h2>
+            </div>
+            <a class="about-gallery-cta" href="articles.html">לכל התוכן <span>←</span></a>
+          </div>
+          <div class="about-gallery-strip">
+            <figure><img src="assets/model_02.jpg" alt=""><span class="tag">מגמה</span></figure>
+            <figure><img src="assets/model_07.jpg" alt=""></figure>
+            <figure><img src="assets/model_13.jpg" alt=""><span class="tag">חדש</span></figure>
+            <figure><img src="assets/model_18.jpg" alt=""></figure>
+            <figure><img src="assets/model_22.jpg" alt=""></figure>
+          </div>
+        </section>
+
         <section class="about-cta-band" data-reveal>
-          <div class="deco-blob deco-blob--sm about-cta-blob"></div>
           <h2>מוכנה להתחיל את המסע שלך?</h2>
           <p>כל פאה מתחילה בשיחה אחת. בואי נדבר על מה שאת מחפשת, ונבנה יחד את הפאה הבאה שלך.</p>
           <a class="btn-primary" href="#" data-open-modal="journey">בואי נתחיל יחד</a>
@@ -106,5 +171,45 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="common.js"></script>
+  <script>
+    /* ---- סליידר "לפני / אחרי" בסעיף "התהליך" — ייחודי לעמוד זה ---- */
+    (function () {
+      const box = document.getElementById('aboutCompare');
+      const handle = document.getElementById('aboutCompareHandle');
+      const afterWrap = box && box.querySelector('.about-compare-after-wrap');
+      if (!box || !handle || !afterWrap) return;
+      const isRtl = document.documentElement.dir === 'rtl';
+      let dragging = false;
+
+      function setSplit(ratio) {
+        const pct = Math.min(96, Math.max(4, ratio * 100));
+        handle.style.insetInlineStart = pct + '%';
+        afterWrap.style.clipPath = isRtl
+          ? `inset(0 ${100 - pct}% 0 0)`
+          : `inset(0 0 0 ${pct}%)`;
+      }
+      function ratioFromEvent(clientX) {
+        const rect = box.getBoundingClientRect();
+        let r = (clientX - rect.left) / rect.width;
+        if (isRtl) r = 1 - r;
+        return r;
+      }
+      function onMove(e) {
+        if (!dragging) return;
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        setSplit(ratioFromEvent(x));
+      }
+      function stop() { dragging = false; }
+
+      handle.addEventListener('pointerdown', () => { dragging = true; });
+      box.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', stop);
+      box.addEventListener('touchstart', () => { dragging = true; }, { passive: true });
+      box.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', stop);
+
+      setSplit(0.5);
+    })();
+  </script>
 </body>
 </html>
