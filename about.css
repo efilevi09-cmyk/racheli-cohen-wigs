@@ -90,12 +90,14 @@
   line-height: .98;
   color: var(--black);
 }
-.about-hero-title span {
+/* משתמשים בצבע אחיד (ולא gradient טקסט) כי ה-h1 מפוצל לתווים בודדים ע"י אפקט
+   הכתיבה המונפשת הגלובלי (common.js / rc-char) - background-clip:text על ה-span
+   העוטף לא "יתפוס" טקסט כשכל אות הופכת לתת-span נפרד, ולכן במקום זאת צובעים כל
+   תו ישירות דרך ירושת color; ה-selector הוא צאצא ישיר (לא "span" כללי) כדי שלא
+   יפגע בתגי ה-rc-char הפנימיים שה-script יוצר בשתי השורות גם יחד */
+.about-hero-title > span {
   display: block;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--rose-2);
 }
 .about-hero-lede {
   margin-top: 18px;
