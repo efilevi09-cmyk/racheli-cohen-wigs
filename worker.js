@@ -4,6 +4,7 @@
  * שומר אוספי תוכן (סטוריז/פיד/אני כלה) וקבצי מדיה (תמונות/סרטונים, כ-base64) ב-Workers KV,
  * כך שתוכן שמועלה דרך האדמין גלוי לכל מבקרת באתר - לא רק בדפדפן שהעלתה ממנו.
  * כולל גם לוז פגישות: שעות פעילות (hours) ורשימת פגישות שנקבעו (appointments).
+ * כולל גם ספירת צפיות אמיתית (views) לפריטי פיד/"אני כלה" - כל פריט מתחיל מ-10 צפיות בסיס.
  *
  * Binding נדרש: RACHELI_KV (KV namespace)
  * Secret נדרש: ADMIN_TOKEN (טוקן הרשאת כתיבה - נשלח מהאדמין בכותרת X-Admin-Token)
@@ -75,6 +76,7 @@ function uuid() {
 }
 
 const VALID_COLLECTIONS = ['topics', 'feed', 'bride_journey'];
+const VIEWS_BASE = 10; /* כל פריט חדש "מתחיל" מ-10 צפיות, כפי שרחלי ביקשה */
 
 /* ---------- בדיקות תקינות בסיסיות ללוז הפגישות ---------- */
 function isValidDateStr(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
@@ -190,6 +192,30 @@ export default {
       const next = list.filter((a) => a.id !== m[1]);
       await env.RACHELI_KV.put('list:appointments', JSON.stringify(next));
       return json({ ok: true }, 200, origin);
+    }
+
+    /* ---- GET /api/views?ids=a,b,c  (ציבורי - שליפת ספירת צפיות אמיתית בעבור כמה פריטים בבת אחת.
+       כל פריט שעדיין לא נספר מקבל ברירת מחדל של 10 צפיות בסיס, כדי שלא תוצג "0" לפריטים חדשים) ---- */
+    if (path === '/api/views' && request.method === 'GET') {
+      const idsParam = url.searchParams.get('ids') || '';
+      const ids = idsParam.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 100);
+      const counts = {};
+      for (const id of ids) {
+        const stored = await env.RACHELI_KV.get('views:' + id);
+        counts[id] = stored ? Number(stored) : VIEWS_BASE;
+      }
+      return json({ counts }, 200, origin);
+    }
+
+    /* ---- POST /api/views/:id  (ציבורי - רישום צפיה אמיתית אחת בפריט. מניעת ספירה כפולה מאותה
+       מבקרת באותה טעינת-עמוד מתבצעת בצד הלקוח (לא נשלחת בקשה שנייה לאותו פריט), לא כאן) ---- */
+    m = path.match(/^\/api\/views\/([A-Za-z0-9_-]+)$/);
+    if (m && request.method === 'POST') {
+      const key = 'views:' + m[1];
+      const current = await env.RACHELI_KV.get(key);
+      const next = (current ? Number(current) : VIEWS_BASE) + 1;
+      await env.RACHELI_KV.put(key, String(next));
+      return json({ id: m[1], count: next }, 200, origin);
     }
 
     /* ---- POST /api/media  (העלאת קובץ חדש) ---- */
