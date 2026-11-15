@@ -147,6 +147,46 @@ h1, h2, h3, h4 {
 .icon-rail a:hover .nav-icon-img,
 .icon-rail a.active .nav-icon-img { background-color: var(--rose-2); transform: scale(1.08); }
 .icon-rail a:active { transform: translateY(0) scale(.96); }
+/* הכיתוב ליד כל אייקון - קיים תמיד ב-DOM, אבל מוצג רק במגירת הניווט הנפתחת במובייל */
+.nav-label { display: none; }
+
+/* ---------- כפתור המבורגר (מובייל בלבד) ---------- */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  transition: background .2s ease;
+}
+.nav-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--black);
+  transition: transform .3s ease, opacity .3s ease;
+}
+.nav-toggle:hover { background: var(--pink-pale); }
+body.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* מסך כהה מאחורי מגירת הניווט הפתוחה (מובייל) */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 12, 12, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+  z-index: 150;
+}
+body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 
 /* ---------- logo ---------- */
 .logo {
@@ -459,12 +499,40 @@ footer.site-footer .links { display: flex; gap: 18px; }
   .logo-mark { width: 32px; height: 32px; font-size: 11px; }
   .logo-text .en1 { font-size: 13px; letter-spacing: 1px; }
   .logo-tagline { font-size: 9px; }
+
+  /* כפתור ההמבורגר מוצג רק במובייל - פותח את רצועת הניווט כמגירה צדדית במקום שורת אייקונים גוללת */
+  .nav-toggle { display: flex; }
+
+  /* רצועת הניווט הופכת למגירה צדדית שקופצת מהצד (RTL - מהימין, איפה שעמודת הניווט יושבת בדסקטופ) */
   .icon-rail {
-    width: auto; flex-direction: row; gap: 4px; padding: 0;
-    overflow-x: auto;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(78vw, 300px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: max(88px, calc(72px + env(safe-area-inset-top, 0px))) 18px 24px;
+    background: var(--white);
+    box-shadow: -18px 0 40px -14px rgba(0, 0, 0, 0.25);
+    transform: translateX(100%);
+    transition: transform .32s ease;
+    overflow-y: auto;
+    z-index: 200;
   }
-  .icon-rail a { width: 32px; height: 32px; flex: 0 0 auto; }
-  .icon-rail a svg { width: 18px; height: 18px; }
+  body.nav-open .icon-rail { transform: translateX(0); }
+  .icon-rail a {
+    width: auto; height: auto; flex: 0 0 auto;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 13px 14px;
+    border-radius: var(--radius-sm);
+  }
+  .icon-rail a svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .nav-icon-img { flex-shrink: 0; }
+  .nav-label { display: inline-block; font-size: 15px; font-weight: 500; }
   .hero { min-height: calc(100vh - 48px); }
   .journeys { gap: 10px; padding: 0 12px 24px; flex-direction: column; align-items: stretch; }
   .journey-btn { padding: 12px 19px; font-size: 16px; white-space: normal; justify-content: center; gap: 10px; }
@@ -495,9 +563,6 @@ footer.site-footer .links { display: flex; gap: 18px; }
   }
   .topics-row::-webkit-scrollbar { display: none; }
   .topic { flex: 0 0 auto; scroll-snap-align: start; }
-}
-@media (max-width: 520px) {
-  .icon-rail a:nth-child(n+7) { display: none; }
 }
 @media (max-width: 480px) {
   /* צפיפות מותאמת כך שיראו כ-6 נושאים על המסך בבת אחת, עם גלילה להמשך */

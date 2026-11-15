@@ -74,9 +74,48 @@
     const el = document.getElementById('icon-rail');
     if (!el) return;
     const current = document.body.dataset.page || '';
+    /* nav-label נוסף לכל קישור - מוסתר ב-CSS בדסקטופ וברצועת האייקונים הישנה, ונחשף רק
+       כשהתפריט נפתח כמגירה צדדית במובייל (ר' מדיה קוארי מובייל ב-styles.css) */
     el.innerHTML = NAV.map(
-      (n) => `<a href="${n.route ? rcHref(n.route) : '#'}" data-tooltip="${n.label}" aria-label="${n.label}" ${n.modal ? `data-open-modal="${n.modal}"` : ''} class="${!n.modal && n.route === current ? 'active' : ''}">${navIcon(n.icon)}</a>`
+      (n) => `<a href="${n.route ? rcHref(n.route) : '#'}" data-tooltip="${n.label}" aria-label="${n.label}" ${n.modal ? `data-open-modal="${n.modal}"` : ''} class="${!n.modal && n.route === current ? 'active' : ''}">${navIcon(n.icon)}<span class="nav-label">${n.label}</span></a>`
     ).join('');
+  }
+
+  /* ---------------- תפריט המבורגר למובייל - פותח את רצועת הניווט כמגירה צדדית ---------------- */
+  function mountMobileNav() {
+    const sideCol = document.querySelector('.side-col');
+    const rail = document.getElementById('icon-rail');
+    if (!sideCol || !rail || document.querySelector('.nav-toggle')) return;
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'nav-toggle';
+    toggle.setAttribute('aria-label', 'פתיחת תפריט ניווט');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = '<span></span><span></span><span></span>';
+    sideCol.insertBefore(toggle, rail);
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'nav-backdrop';
+    document.body.appendChild(backdrop);
+
+    function setOpen(open) {
+      document.body.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? 'סגירת תפריט ניווט' : 'פתיחת תפריט ניווט');
+    }
+
+    toggle.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open')));
+    backdrop.addEventListener('click', () => setOpen(false));
+    rail.addEventListener('click', (e) => {
+      if (e.target.closest('a')) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 860) setOpen(false);
+    });
   }
 
   function mountLogo() {
@@ -605,7 +644,7 @@
 
   window.RacheliModals = { open: openModal, close: closeAllModals };
   window.RacheliCommon = {
-    mountRail, mountLogo, mountFooter, mountModals,
+    mountRail, mountLogo, mountFooter, mountModals, mountMobileNav,
     showToast, copyText, rcHref,
     applyRingSegments: function () { applyRingSegments(); },
     renderLikedVideosGrid: function () { renderLikedVideosGrid(); },
@@ -1882,6 +1921,7 @@
   document.addEventListener('DOMContentLoaded', async function () {
     mountRail();
     mountLogo();
+    mountMobileNav();
     mountFooter();
     mountModals();
     mountSideCta();
