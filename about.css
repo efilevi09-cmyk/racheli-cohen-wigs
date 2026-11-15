@@ -50,22 +50,23 @@
   inset-inline-start: 18px;
   width: clamp(104px, 20vw, 140px);
   height: clamp(104px, 20vw, 140px);
-  animation: aboutBadgeSpin 22s linear infinite;
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.18));
 }
-.about-badge svg { width: 100%; height: 100%; }
-.about-badge text {
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 10.5px;
-  letter-spacing: .5px;
-  fill: var(--black);
+/* טבעת מסתובבת מקווקוות - חלופה פשוטה ויציבה לטקסט-על-מסלול ב-SVG (textPath לא
+   התעקש להציג טקסט לאורך מסלול עגול בבדיקה, ולכן בוחרים בפתרון CSS טהור ואמין) */
+.about-badge-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed var(--rose-1);
+  animation: aboutBadgeSpin 18s linear infinite;
 }
+.about-badge-ring--in { inset: 0; }
+.about-badge-ring--out { inset: -10px; border-color: var(--rose-2); opacity: .55; animation-duration: 26s; animation-direction: reverse; }
 .about-badge-core {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 46%; height: 46%;
+  width: 58%; height: 58%;
   border-radius: 50%;
   background: var(--gradient);
   color: var(--white);
@@ -74,12 +75,11 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-  animation: aboutBadgeSpinReverse 22s linear infinite;
+  box-shadow: var(--shadow-soft);
 }
-.about-badge-core strong { font-family: var(--font-display); font-size: clamp(16px, 3vw, 22px); }
-.about-badge-core span { font-size: 10px; font-family: var(--font-ui); margin-top: 2px; }
+.about-badge-core strong { font-family: var(--font-display); font-size: clamp(18px, 3.4vw, 24px); }
+.about-badge-core span { font-size: 11px; font-family: var(--font-ui); margin-top: 3px; }
 @keyframes aboutBadgeSpin { to { transform: rotate(360deg); } }
-@keyframes aboutBadgeSpinReverse { to { transform: rotate(-360deg); } }
 
 .about-hero-text { padding: 0 2px 8px; text-align: start; }
 .about-hero-title {
