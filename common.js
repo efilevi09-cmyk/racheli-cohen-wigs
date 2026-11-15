@@ -693,96 +693,59 @@
   let igMediaEl = null;
   let igMuted = false; /* כברירת מחדל מנסים להשמיע קול - פתיחת הסטורי היא כבר קליק ישיר של המשתמשת */
 
-  /* ---------------- shared content store (IndexedDB) used by the admin CMS ---------------- */
+  /* ---------------- shared content store (Cloudflare Worker + KV) used by the admin CMS ----------------
+     האתר הסטטי משתמש ב-Worker ייעודי (racheli-cohen-wigs-api) שמאחסן את התוכן וקבצי המדיה ב-Workers KV -
+     כך שתוכן שמועלה דרך האדמין גלוי לכל מבקרת באתר (לא רק בדפדפן שהעלתה ממנו, כפי שהיה עם IndexedDB). */
+  const RC_API_BASE = 'https://racheli-cohen-wigs-api.efilevi09.workers.dev';
+  const RC_ADMIN_TOKEN = '454e6250a4d24c3960d044d213a005e12a3f1a8691a97178';
   const RCStore = (function () {
-    const DB_NAME = 'racheli-cms';
-    const DB_VERSION = 1;
-    function openDB() {
-      return new Promise((resolve, reject) => {
-        if (!window.indexedDB) { reject(new Error('no-idb')); return; }
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = () => {
-          const db = req.result;
-          if (!db.objectStoreNames.contains('media')) db.createObjectStore('media');
-          if (!db.objectStoreNames.contains('content')) db.createObjectStore('content');
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    }
-    async function getTopics() {
+    async function apiGetCollection(key) {
       try {
-        const db = await openDB();
-        return await new Promise((resolve) => {
-          const tx = db.transaction('content', 'readonly');
-          const req = tx.objectStore('content').get('topics');
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => resolve(null);
-        });
+        const res = await fetch(RC_API_BASE + '/api/collection/' + key, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.data || null;
       } catch (e) { return null; }
     }
-    async function setTopics(data) {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('content', 'readwrite');
-        tx.objectStore('content').put(data, 'topics');
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+    async function apiSetCollection(key, data) {
+      const res = await fetch(RC_API_BASE + '/api/collection/' + key, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': RC_ADMIN_TOKEN },
+        body: JSON.stringify(data),
       });
+      if (!res.ok) throw new Error('rc-save-failed');
     }
+    async function getTopics() { return apiGetCollection('topics'); }
+    async function setTopics(data) { return apiSetCollection('topics', data); }
     async function putMedia(id, blob) {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('media', 'readwrite');
-        tx.objectStore('media').put(blob, id);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+      const contentType = (blob && blob.type) || 'application/octet-stream';
+      const res = await fetch(RC_API_BASE + '/api/media/' + encodeURIComponent(id), {
+        method: 'PUT',
+        headers: { 'X-Admin-Token': RC_ADMIN_TOKEN, 'X-Content-Type': contentType },
+        body: blob,
       });
+      if (!res.ok) throw new Error('rc-upload-failed');
+      return res.json();
     }
     async function getMedia(id) {
       try {
-        const db = await openDB();
-        return await new Promise((resolve) => {
-          const tx = db.transaction('media', 'readonly');
-          const req = tx.objectStore('media').get(id);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => resolve(null);
-        });
+        const res = await fetch(RC_API_BASE + '/api/media/' + encodeURIComponent(id));
+        if (!res.ok) return null;
+        return await res.blob();
       } catch (e) { return null; }
     }
     async function deleteMedia(id) {
       try {
-        const db = await openDB();
-        return await new Promise((resolve) => {
-          const tx = db.transaction('media', 'readwrite');
-          tx.objectStore('media').delete(id);
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => resolve();
+        await fetch(RC_API_BASE + '/api/media/' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { 'X-Admin-Token': RC_ADMIN_TOKEN },
         });
       } catch (e) {}
     }
-    /* פונקציות גנריות לאחסון כל סוג תוכן (לא רק סטוריז) באותו ה-object-store, לפי מפתח -
+    /* פונקציות גנריות לאחסון כל סוג תוכן (לא רק סטוריז) באותו ה-Worker, לפי מפתח -
        בשימוש עבור הפיד ("feed") וקרוסלת "אני כלה" ("bride_journey") */
-    async function getContent(key) {
-      try {
-        const db = await openDB();
-        return await new Promise((resolve) => {
-          const tx = db.transaction('content', 'readonly');
-          const req = tx.objectStore('content').get(key);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => resolve(null);
-        });
-      } catch (e) { return null; }
-    }
-    async function setContent(key, data) {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('content', 'readwrite');
-        tx.objectStore('content').put(data, key);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-      });
-    }
+    async function getContent(key) { return apiGetCollection(key); }
+    async function setContent(key, data) { return apiSetCollection(key, data); }
     return {
       getTopics, setTopics, putMedia, getMedia, deleteMedia, getContent, setContent,
       DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY,
