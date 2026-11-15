@@ -1,8 +1,9 @@
-/**
+/*
  * racheli-cohen-wigs-api - Cloudflare Worker
  * Backend משותף (בחינם, בלי R2) לאתר הסטטי racheli-cohen-wigs-site.pages.dev:
  * שומר אוספי תוכן (סטוריז/פיד/אני כלה) וקבצי מדיה (תמונות/סרטונים, כ-base64) ב-Workers KV,
  * כך שתוכן שמועלה דרך האדמין גלוי לכל מבקרת באתר - לא רק בדפדפן שהעלתה ממנו.
+ * כולל גם לוז פגישות: שעות פעילות (hours) ורשימת פגישות שנקבעו (appointments).
  *
  * Binding נדרש: RACHELI_KV (KV namespace)
  * Secret נדרש: ADMIN_TOKEN (טוקן הרשאת כתיבה - נשלח מהאדמין בכותרת X-Admin-Token)
@@ -75,6 +76,10 @@ function uuid() {
 
 const VALID_COLLECTIONS = ['topics', 'feed', 'bride_journey'];
 
+/* ---------- בדיקות תקינות בסיסיות ללוז הפגישות ---------- */
+function isValidDateStr(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+function isValidTimeStr(s) { return typeof s === 'string' && /^\d{2}:\d{2}$/.test(s); }
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -108,6 +113,83 @@ export default {
       }
 
       return json({ error: 'method not allowed' }, 405, origin);
+    }
+
+    /* ---- GET/PUT /api/hours  (הגדרת שעות הפעילות השבועיות + תאריכים חסומים - נקודת אמת אחת
+       שגם האדמין קוראת/כותבת וגם טופס קביעת הפגישה הציבורי קורא כדי לחשב שעות פנויות) ---- */
+    if (path === '/api/hours') {
+      if (request.method === 'GET') {
+        const stored = await env.RACHELI_KV.get('config:hours', 'json');
+        return json({ data: stored || null }, 200, origin);
+      }
+      if (request.method === 'PUT') {
+        if (!requireAuth(request)) return json({ error: 'unauthorized' }, 401, origin);
+        let body;
+        try { body = await request.json(); } catch (e) { return json({ error: 'invalid json' }, 400, origin); }
+        if (!body || typeof body !== 'object') return json({ error: 'expected an object' }, 400, origin);
+        await env.RACHELI_KV.put('config:hours', JSON.stringify(body));
+        return json({ ok: true }, 200, origin);
+      }
+      return json({ error: 'method not allowed' }, 405, origin);
+    }
+
+    /* ---- GET /api/appointments/taken?date=YYYY-MM-DD  (ציבורי - אילו שעות כבר תפוסות בתאריך
+       נתון, בלי לחשוף שום פרט מזהה של הלקוחות שקבעו אותן) ---- */
+    if (path === '/api/appointments/taken' && request.method === 'GET') {
+      const date = url.searchParams.get('date');
+      if (!isValidDateStr(date)) return json({ error: 'invalid date' }, 400, origin);
+      const list = (await env.RACHELI_KV.get('list:appointments', 'json')) || [];
+      const taken = list.filter((a) => a.date === date).map((a) => a.time);
+      return json({ taken }, 200, origin);
+    }
+
+    /* ---- GET /api/appointments  (אדמין בלבד - רשימה מלאה לניהול) ---- */
+    if (path === '/api/appointments' && request.method === 'GET') {
+      if (!requireAuth(request)) return json({ error: 'unauthorized' }, 401, origin);
+      const list = (await env.RACHELI_KV.get('list:appointments', 'json')) || [];
+      list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+      return json({ data: list }, 200, origin);
+    }
+
+    /* ---- POST /api/appointments  (ציבורי - קביעת פגישה חדשה מטופס האתר, עם בדיקת כפילות
+       מול הרשימה הקיימת לאותו תאריך+שעה בדיוק - קריאה-ואז-כתיבה; אין נעילות אמיתיות ב-KV,
+       אז בעומס תיאורטי-גבוה-מאוד של שתי קביעות בו-זמנית לאותה שעה קיים סיכוי קטן לשני
+       רישומים זהים, אבל זה מספיק טוב בהיקף של סטודיו פאות בודד) ---- */
+    if (path === '/api/appointments' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch (e) { return json({ error: 'invalid json' }, 400, origin); }
+      const { date, time, name, phone, email, context } = body || {};
+      if (!isValidDateStr(date)) return json({ error: 'invalid date' }, 400, origin);
+      if (!isValidTimeStr(time)) return json({ error: 'invalid time' }, 400, origin);
+      if (!name || !phone) return json({ error: 'missing name or phone' }, 400, origin);
+
+      const list = (await env.RACHELI_KV.get('list:appointments', 'json')) || [];
+      if (list.some((a) => a.date === date && a.time === time)) {
+        return json({ error: 'slot taken' }, 409, origin);
+      }
+
+      const record = {
+        id: 'apt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        date, time,
+        name: String(name).slice(0, 100),
+        phone: String(phone).slice(0, 40),
+        email: email ? String(email).slice(0, 120) : '',
+        context: context ? String(context).slice(0, 200) : '',
+        createdAt: new Date().toISOString(),
+      };
+      list.push(record);
+      await env.RACHELI_KV.put('list:appointments', JSON.stringify(list));
+      return json({ ok: true, appointment: record }, 200, origin);
+    }
+
+    /* ---- DELETE /api/appointments/:id  (אדמין בלבד - ביטול פגישה) ---- */
+    m = path.match(/^\/api\/appointments\/([A-Za-z0-9_-]+)$/);
+    if (m && request.method === 'DELETE') {
+      if (!requireAuth(request)) return json({ error: 'unauthorized' }, 401, origin);
+      const list = (await env.RACHELI_KV.get('list:appointments', 'json')) || [];
+      const next = list.filter((a) => a.id !== m[1]);
+      await env.RACHELI_KV.put('list:appointments', JSON.stringify(next));
+      return json({ ok: true }, 200, origin);
     }
 
     /* ---- POST /api/media  (העלאת קובץ חדש) ---- */
