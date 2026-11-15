@@ -522,6 +522,10 @@ footer.site-footer .links { display: flex; gap: 18px; }
     z-index: 200;
   }
   body.nav-open .icon-rail { transform: translateX(0); }
+  /* z-index של icon-rail (200) נבדק רק מול אחיו בתוך ה-stacking context של side-col (z-index:40) -
+     ומכיוון שה-backdrop (z-index:150) נמצא ברמת ה-body, הוא היה מצויר מעל כל ה-side-col כולל המגירה
+     הפתוחה בתוכו, וחוסם לחיצות על קישורי התפריט. מעלים את side-col מעל ה-backdrop רק כשהתפריט פתוח */
+  body.nav-open .side-col { z-index: 220; }
   .icon-rail a {
     display: flex;
     width: 100%; height: auto; flex: 0 0 auto;
