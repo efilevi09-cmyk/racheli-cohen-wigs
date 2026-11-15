@@ -1,173 +1,46 @@
-/* ===== אודות (About) page — עיצוב עריכתי בהשראת LUXE: שחור/לבנבן-קרם/רוז, טיפוגרפיה
-   גדולה ובועטת, רצועת שירותים, סליידר "לפני/אחרי" והצצה לסטודיו ===== */
+/* ===== אודות (About) page — בהשראת עיצוב ה-Figma: הירו עם קולאז' תמונות
+   (אותו קומפוננט מדף הבית), רצועת נושאים, טקסט שבע לו תחושת "כתיבה" בגלילה
+   וקולאז'ים צפים עם תזוזת פרלקס עדינה ===== */
 
-.about-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 12.5px;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--rose-2);
+/* ---------- הירו - גרסה מקוצרת של ה-hero הראשי (אותו קולאז' תמונות + overlay),
+   עם תוכן ייעודי לעמוד אודות ---------- */
+body[data-page="about"] .hero.about-page-hero {
+  min-height: clamp(560px, 92vh, 860px);
 }
-.about-eyebrow i {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--gradient);
-  flex: 0 0 auto;
-}
-.about-eyebrow--center { justify-content: center; }
-
-/* ---------- הירו ---------- */
-.about-hero {
-  position: relative;
-  padding: 36px 24px 0;
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 34px;
-  background: var(--pink-pale);
-}
-.about-hero-media {
-  position: relative;
-  margin: 0 -24px;
-}
-.about-hero-photo {
-  position: relative;
-  aspect-ratio: 4/5;
-  overflow: hidden;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.about-hero-photo img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.about-badge {
-  position: absolute;
-  bottom: 18px;
-  inset-inline-start: 18px;
-  width: clamp(104px, 20vw, 140px);
-  height: clamp(104px, 20vw, 140px);
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.18));
-}
-/* טבעת מסתובבת מקווקוות - חלופה פשוטה ויציבה לטקסט-על-מסלול ב-SVG (textPath לא
-   התעקש להציג טקסט לאורך מסלול עגול בבדיקה, ולכן בוחרים בפתרון CSS טהור ואמין) */
-.about-badge-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1.5px dashed var(--rose-1);
-  animation: aboutBadgeSpin 18s linear infinite;
-}
-.about-badge-ring--in { inset: 0; }
-.about-badge-ring--out { inset: -10px; border-color: var(--rose-2); opacity: .55; animation-duration: 26s; animation-direction: reverse; }
-.about-badge-core {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 58%; height: 58%;
-  border-radius: 50%;
-  background: var(--gradient);
-  color: var(--white);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  box-shadow: var(--shadow-soft);
-}
-.about-badge-core strong { font-family: var(--font-display); font-size: clamp(18px, 3.4vw, 24px); }
-.about-badge-core span { font-size: 11px; font-family: var(--font-ui); margin-top: 3px; }
-@keyframes aboutBadgeSpin { to { transform: rotate(360deg); } }
-
-.about-hero-text { padding: 0 2px 8px; text-align: start; }
-.about-hero-title {
+.about-hero-tagline {
   margin-top: 16px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(42px, 10vw, 76px);
-  line-height: .98;
-  color: var(--black);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.6;
+  max-width: 480px;
+  margin-inline: auto;
+  opacity: .92;
 }
-/* משתמשים בצבע אחיד (ולא gradient טקסט) כי ה-h1 מפוצל לתווים בודדים ע"י אפקט
-   הכתיבה המונפשת הגלובלי (common.js / rc-char) - background-clip:text על ה-span
-   העוטף לא "יתפוס" טקסט כשכל אות הופכת לתת-span נפרד, ולכן במקום זאת צובעים כל
-   תו ישירות דרך ירושת color. חשוב: משתמשים ב-class ייעודי (about-hero-accent) ולא
-   ב-selector "span" גנרי - כי אפקט הכתיבה המונפשת עוטף גם את השורה הראשונה
-   (רחלי כהן) בתגי span.rc-char שהם *גם הם* צאצאים ישירים של ה-h1, וסלקטור כללי
-   "h1 > span" היה תופס בטעות גם אותם והופך כל אות בשורה הראשונה לבלוק נפרד */
+/* צבע אחיד (לא gradient-text-clip) בכוונה: ה-h1 מפוצל לתווים בודדים ע"י אפקט
+   הכתיבה המונפשת הגלובלי (common.js / rc-char), כך שה-span העוטף נשאר בלי טקסט
+   ישיר משלו - ו-background-clip:text לא היה "תופס" שום דבר ויציג טקסט שקוף/נעלם */
 .about-hero-accent {
   display: block;
-  color: var(--rose-2);
+  color: var(--rose-1);
 }
-/* ---------- הירו - פריסת שולחן-עבודה (תמונה + טקסט זה לצד זה) ---------- */
-@media (min-width: 761px) {
-  .about-hero {
-    flex-direction: row;
-    align-items: center;
-    gap: clamp(32px, 5vw, 76px);
-    padding: 56px 24px 0;
-    overflow: hidden;
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  }
-  .about-hero-media {
-    flex: 0 0 auto;
-    width: min(400px, 40%);
-    margin: 0;
-    align-self: flex-end;
-  }
-  .about-hero-photo {
-    aspect-ratio: 3/4;
-    border-radius: var(--radius-lg);
-  }
-  .about-hero-text { flex: 1 1 auto; padding: 0; }
-  .about-stats { margin-top: 44px; }
-}
-
-.about-hero-lede {
-  margin-top: 18px;
-  font-size: 16px;
-  line-height: 1.7;
-  color: #2b2b2b;
-  max-width: 420px;
-}
-.about-hero-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 26px;
-  background: var(--black);
-  color: var(--white);
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 14.5px;
-  padding: 15px 28px;
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-soft);
-  transition: transform .2s ease, box-shadow .2s ease, background .3s ease;
-}
-.about-hero-cta span { transition: transform .25s ease; }
-.about-hero-cta:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); background: #1d1d1d; }
-.about-hero-cta:hover span { transform: translateX(-4px); }
 
 /* ---------- רצועת סטטיסטיקות ---------- */
 .about-stats {
   max-width: 760px;
-  margin: 0 auto;
-  padding: 0 24px;
-  margin-top: -34px;
+  margin: -56px auto 0;
   position: relative;
-  z-index: 2;
+  z-index: 4;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 16px;
 }
 .about-stat {
   text-align: center;
   background: var(--white);
   border-radius: var(--radius-md);
-  padding: 22px 10px;
+  padding: 22px 12px;
   box-shadow: var(--shadow-card);
 }
 .about-stat strong {
@@ -180,7 +53,7 @@
 .about-stat span {
   display: block;
   margin-top: 8px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-family: var(--font-ui);
   color: var(--gray-text);
 }
@@ -188,15 +61,14 @@
 /* ---------- בלוקי טקסט ---------- */
 .about-block {
   max-width: 820px;
-  margin: 92px auto;
+  margin: 100px auto;
   padding: 0 24px;
   text-align: center;
 }
 .about-block h2 {
-  font-family: var(--font-display);
   font-size: clamp(24px, 3.6vw, 34px);
   margin-bottom: 26px;
-  line-height: 1.28;
+  line-height: 1.32;
   text-wrap: balance;
 }
 .about-block p {
@@ -207,89 +79,55 @@
   margin-inline: auto;
 }
 
-/* ---------- רצועת שירותים (בהשראת ה-cards של LUXE) ---------- */
-.about-services { padding: 0 24px; margin: 0 auto 96px; max-width: 1080px; }
-.about-services > .about-eyebrow { display: flex; margin-bottom: 14px; }
-.about-services h2 {
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3.4vw, 32px);
-  margin-bottom: 36px;
-  text-wrap: balance;
+/* ---------- אפקט "כתיבה בגלילה" לכותרות - כל מילה שקופה עד שהגלילה "כותבת" אותה ---------- */
+.aw-word {
+  display: inline-block;
+  opacity: .14;
+  color: inherit;
+  transition: opacity .25s linear, color .25s linear;
+  will-change: opacity;
 }
-.about-services-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-.service-card {
-  position: relative;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  aspect-ratio: 3/4;
-  box-shadow: var(--shadow-card);
-}
-.service-card img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform .6s ease;
-}
-.service-card::after {
-  content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, .78) 100%);
-}
-.service-card:hover img { transform: scale(1.07); }
-.service-card-body {
-  position: absolute; inset-inline: 0; bottom: 0;
-  z-index: 1;
-  padding: 20px 18px 22px;
-  color: var(--white);
-}
-.service-card-body h3 {
-  font-family: var(--font-display);
-  font-size: clamp(18px, 2.2vw, 22px);
-  margin-bottom: 6px;
-}
-.service-card-body p {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 1.55;
-  opacity: .92;
-  max-width: 220px;
-}
+.about-write.aw-active .aw-word { color: var(--rose-2); }
+.about-write.aw-done .aw-word { color: inherit; }
 
-/* ---------- קולאז' (קיים) ---------- */
+/* ---------- קולאז' (קיים באתר) - עכשיו עם תזוזת פרלקס עדינה בגלילה (תחושת "חיות") ---------- */
 .about-collage {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   max-width: 760px;
-  margin: 40px auto 96px;
+  margin: 56px auto 100px;
   padding: 0 24px;
 }
-.about-collage div {
+.about-collage div,
+.about-float {
   overflow: hidden;
   border-radius: 24px;
   box-shadow: var(--shadow-card);
 }
-.about-collage img {
+.about-collage img,
+.about-float img {
   width: 100%;
   aspect-ratio: 3/4;
   object-fit: cover;
   display: block;
-  transition: transform .5s ease;
+  transform: translateY(var(--parallax-y, 0px)) scale(1.12);
+  will-change: transform;
 }
-.about-collage div:hover img { transform: scale(1.06); }
-.about-collage div:nth-child(2) { margin-top: 28px; }
-.about-collage div:nth-child(3) { margin-top: -14px; }
+.about-collage div:hover img { transform: translateY(var(--parallax-y, 0px)) scale(1.18); }
+.about-collage div:nth-child(2),
+.about-float:nth-child(2) { margin-top: 28px; }
+.about-collage div:nth-child(3),
+.about-float:nth-child(3) { margin-top: -14px; }
+@media (prefers-reduced-motion: reduce) {
+  .about-collage img, .about-float img { transform: scale(1) !important; }
+}
 
 /* ---------- ציטוט ---------- */
 .about-quote {
   position: relative;
   max-width: 700px;
-  margin: 96px auto;
+  margin: 100px auto;
   padding: 0 24px;
   text-align: center;
   font-family: var(--font-display);
@@ -306,226 +144,41 @@
   margin-bottom: 6px;
 }
 
-/* ---------- "התהליך" — סליידר לפני/אחרי אינטראקטיבי ---------- */
-.about-process {
-  max-width: 1080px;
-  margin: 0 auto 100px;
-  padding: 0 24px;
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: clamp(28px, 5vw, 56px);
-  align-items: center;
-}
-.about-process-text { text-align: start; }
-.about-process-text h2 {
-  margin-top: 14px;
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3.2vw, 32px);
-  line-height: 1.26;
-  text-wrap: balance;
-}
-.about-process-text p {
-  margin-top: 16px;
-  font-size: 15.5px;
-  line-height: 1.85;
-  color: var(--gray-text);
-  max-width: 360px;
-}
-.about-process-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin-top: 24px;
-  background: var(--black);
-  color: var(--white);
-  font-weight: 600;
-  font-size: 14px;
-  padding: 13px 24px;
-  border-radius: var(--radius-pill);
-  transition: transform .2s ease, background .3s ease;
-}
-.about-process-cta:hover { transform: translateY(-2px); background: #1d1d1d; }
-
-.about-compare {
-  position: relative;
-  aspect-ratio: 4/3;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  user-select: none;
-  touch-action: pan-y;
-}
-.about-compare-img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.about-compare-after-wrap {
-  position: absolute; inset: 0;
-  clip-path: inset(0 0 0 50%);
-}
-html[dir="rtl"] .about-compare-after-wrap { clip-path: inset(0 50% 0 0); }
-.about-compare-tag {
-  position: absolute;
-  top: 16px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 11.5px;
-  letter-spacing: .4px;
-  color: var(--white);
-  background: rgba(0, 0, 0, .55);
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  backdrop-filter: blur(3px);
-}
-.about-compare-tag--before { inset-inline-start: 16px; }
-.about-compare-tag--after { inset-inline-end: 16px; background: linear-gradient(120deg, var(--rose-1), var(--rose-2)); }
-.about-compare-handle {
-  position: absolute;
-  top: 0; bottom: 0;
-  inset-inline-start: 50%;
-  width: 3px;
-  background: var(--white);
-  cursor: ew-resize;
-  transform: translateX(-50%);
-}
-html[dir="rtl"] .about-compare-handle { transform: translateX(50%); }
-.about-compare-handle span {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: var(--white);
-  box-shadow: var(--shadow-card);
-  display: flex; align-items: center; justify-content: center;
-}
-.about-compare-handle span::before {
-  content: "↔";
-  font-size: 16px;
-  color: var(--black);
-}
-
-/* ---------- "מהסטודיו" — רצועת תמונות ---------- */
-.about-gallery { margin: 0 auto 100px; padding: 0; }
-.about-gallery-head {
-  max-width: 1080px;
-  margin: 0 auto 28px;
-  padding: 0 24px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-.about-gallery-head h2 {
-  margin-top: 10px;
-  font-family: var(--font-display);
-  font-size: clamp(22px, 3vw, 30px);
-  line-height: 1.25;
-}
-.about-gallery-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--rose-2);
-  padding: 11px 4px;
-  border-bottom: 1.5px solid var(--rose-1);
-  white-space: nowrap;
-}
-.about-gallery-strip {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding: 4px 24px 14px;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
-}
-.about-gallery-strip::-webkit-scrollbar { display: none; }
-.about-gallery-strip figure {
-  position: relative;
-  flex: 0 0 auto;
-  width: clamp(140px, 24vw, 190px);
-  aspect-ratio: 3/4;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  scroll-snap-align: start;
-  box-shadow: var(--shadow-soft);
-}
-.about-gallery-strip figure:nth-child(even) { margin-top: 22px; }
-.about-gallery-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.about-gallery-strip .tag {
-  position: absolute;
-  top: 10px; inset-inline-start: 10px;
-  background: var(--white);
-  color: var(--rose-2);
-  font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 10.5px;
-  letter-spacing: .3px;
-  padding: 5px 11px;
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-soft);
-}
-
-/* ---------- רצועת קריאה לפעולה ---------- */
+/* ---------- רצועת סיום - "אז מאיפה הפאה שלך מתחילה?" ---------- */
 .about-cta-band {
   position: relative;
-  max-width: 920px;
+  max-width: 900px;
   margin: 20px auto 80px;
-  padding: 68px 32px;
+  padding: 64px 32px;
   text-align: center;
   border-radius: var(--radius-lg);
-  background: var(--black);
+  background: linear-gradient(135deg, var(--pink-pale) 0%, #fff 60%);
   box-shadow: var(--shadow-card);
   overflow: hidden;
 }
-.about-cta-band::before {
-  content: "";
-  position: absolute; inset: 0;
-  background: radial-gradient(60% 80% at 50% 0%, rgba(224, 122, 138, .35) 0%, transparent 70%);
-}
+.about-cta-blob { top: -18px; left: 50%; transform: translateX(-50%); opacity: .8; }
 .about-cta-band h2 {
-  position: relative;
-  font-family: var(--font-display);
-  color: var(--white);
   font-size: clamp(24px, 3.2vw, 30px);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .about-cta-band p {
-  position: relative;
   font-size: 15px;
-  color: #cfcfcf;
-  max-width: 440px;
-  margin: 0 auto 28px;
-  line-height: 1.7;
+  color: var(--gray-text);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.75;
 }
-.about-cta-band .btn-primary { position: relative; }
-
-@media (max-width: 860px) {
-  .about-services-grid { grid-template-columns: repeat(2, 1fr); }
-  .about-services-grid .service-card:last-child { grid-column: 1 / -1; aspect-ratio: 16/9; }
-  .about-process { grid-template-columns: 1fr; }
-  .about-process-text { text-align: center; }
-  .about-process-text p { margin-inline: auto; }
+.about-cta-line2 {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, 22px) !important;
+  color: var(--black) !important;
+  margin: 14px auto 26px !important;
 }
 
 @media (max-width: 760px) {
-  .about-hero { padding: 28px 16px 0; text-align: center; }
-  .about-hero-media { margin: 0 -16px; }
-  .about-hero-text { text-align: center; }
-  .about-hero-lede { margin-inline: auto; }
-  .about-stats { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px; }
+  .about-stats { margin-top: -40px; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px; }
   .about-stat { padding: 16px 8px; }
   .about-collage { grid-template-columns: repeat(2, 1fr); max-width: 420px; padding: 0 16px; }
-  .about-collage div:nth-child(3) { display: none; }
-  .about-services { padding: 0 16px; }
-  .about-services-grid { grid-template-columns: 1fr; }
-  .about-services-grid .service-card:last-child { grid-column: auto; aspect-ratio: 3/4; }
+  .about-collage div:nth-child(3), .about-float:nth-child(3) { display: none; }
   .about-cta-band { padding: 48px 22px; margin: 20px 16px 60px; }
-  .about-gallery-head { padding: 0 16px; }
-  .about-gallery-strip { padding: 4px 16px 14px; }
 }
