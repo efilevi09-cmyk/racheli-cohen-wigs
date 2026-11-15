@@ -388,8 +388,168 @@
     return row;
   }
 
+  /* ==========================================================================
+     ניהול לוז פגישות: שעות פעילות, תאריכים חסומים, רשימת פגישות
+     ========================================================================== */
+  const DAY_NAMES_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  let hoursConfig = null;
+
+  async function loadHours() {
+    const stored = await window.RacheliStore.getHours();
+    hoursConfig = stored || JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_HOURS));
+    if (!hoursConfig.days) hoursConfig.days = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_HOURS.days));
+    if (!Array.isArray(hoursConfig.blockedDates)) hoursConfig.blockedDates = [];
+    if (!hoursConfig.slotMinutes) hoursConfig.slotMinutes = 30;
+  }
+
+  function persistHours() {
+    const status = document.getElementById('admin-save-status');
+    return window.RacheliStore.setHours(hoursConfig).then(() => {
+      if (status) {
+        status.textContent = 'נשמר ✓';
+        setTimeout(() => { status.textContent = 'כל השינויים נשמרים אוטומטית'; }, 1600);
+      }
+    }).catch(() => {
+      if (status) status.textContent = 'שגיאה בשמירה - נסי שוב';
+    });
+  }
+  const persistHoursDebounced = debounce(persistHours, 600);
+
+  function renderHours() {
+    const wrap = document.getElementById('admin-hours');
+    wrap.innerHTML = '';
+
+    const slotRow = document.createElement('div');
+    slotRow.className = 'admin-slot-minutes-row';
+    slotRow.innerHTML = `<label class="admin-check-label">אורך כל תור (בדקות): <input type="number" class="admin-num-input" min="10" step="5" value="${Number(hoursConfig.slotMinutes) || 30}"></label>`;
+    const slotInput = slotRow.querySelector('input');
+    slotInput.addEventListener('input', () => {
+      hoursConfig.slotMinutes = Number(slotInput.value) || 30;
+      persistHoursDebounced();
+    });
+    wrap.appendChild(slotRow);
+
+    for (let d = 0; d <= 6; d++) {
+      const dayConfig = hoursConfig.days[d] || { open: false, from: '', to: '' };
+      const row = document.createElement('div');
+      row.className = 'admin-hours-row';
+      row.innerHTML = `
+        <span class="admin-hours-day">יום ${DAY_NAMES_HE[d]}</span>
+        <label class="admin-check-label"><input type="checkbox" class="admin-hours-open" ${dayConfig.open ? 'checked' : ''}> פתוח</label>
+        <div class="admin-hours-times">
+          <input type="time" class="admin-time-input admin-hours-from" value="${dayConfig.from || '10:00'}" ${dayConfig.open ? '' : 'disabled'}>
+          <span class="admin-hours-closed">עד</span>
+          <input type="time" class="admin-time-input admin-hours-to" value="${dayConfig.to || '19:00'}" ${dayConfig.open ? '' : 'disabled'}>
+        </div>
+      `;
+      const openCheck = row.querySelector('.admin-hours-open');
+      const fromInput = row.querySelector('.admin-hours-from');
+      const toInput = row.querySelector('.admin-hours-to');
+      openCheck.addEventListener('change', () => {
+        dayConfig.open = openCheck.checked;
+        hoursConfig.days[d] = dayConfig;
+        fromInput.disabled = !dayConfig.open;
+        toInput.disabled = !dayConfig.open;
+        persistHours();
+      });
+      fromInput.addEventListener('input', () => { dayConfig.from = fromInput.value; hoursConfig.days[d] = dayConfig; persistHoursDebounced(); });
+      toInput.addEventListener('input', () => { dayConfig.to = toInput.value; hoursConfig.days[d] = dayConfig; persistHoursDebounced(); });
+      wrap.appendChild(row);
+    }
+  }
+
+  function renderBlockedDates() {
+    const wrap = document.getElementById('admin-blocked-dates');
+    wrap.innerHTML = '';
+
+    const list = document.createElement('div');
+    list.className = 'admin-blocked-list';
+    hoursConfig.blockedDates.slice().sort().forEach((dateStr) => {
+      const chip = document.createElement('span');
+      chip.className = 'admin-blocked-chip';
+      chip.innerHTML = `${formatAdminDate(dateStr)} <button type="button" title="הסרה">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', async () => {
+        hoursConfig.blockedDates = hoursConfig.blockedDates.filter((d) => d !== dateStr);
+        await persistHours();
+        renderBlockedDates();
+      });
+      list.appendChild(chip);
+    });
+    if (!hoursConfig.blockedDates.length) {
+      const empty = document.createElement('span');
+      empty.className = 'admin-hours-closed';
+      empty.textContent = 'אין תאריכים חסומים כרגע';
+      list.appendChild(empty);
+    }
+    wrap.appendChild(list);
+
+    const addRow = document.createElement('div');
+    addRow.className = 'admin-blocked-add';
+    addRow.innerHTML = `<input type="date" class="admin-time-input" id="admin-blocked-date-input">
+      <button type="button" class="admin-file-label" id="admin-blocked-add-btn">+ חסימת תאריך</button>`;
+    addRow.querySelector('#admin-blocked-add-btn').addEventListener('click', async () => {
+      const input = document.getElementById('admin-blocked-date-input');
+      const val = input.value;
+      if (!val) return;
+      if (!hoursConfig.blockedDates.includes(val)) {
+        hoursConfig.blockedDates.push(val);
+        await persistHours();
+        renderBlockedDates();
+      }
+      input.value = '';
+    });
+    wrap.appendChild(addRow);
+  }
+
+  function formatAdminDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return dateStr;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+  }
+
+  async function renderAppointments() {
+    const wrap = document.getElementById('admin-appointments');
+    wrap.innerHTML = '<p class="admin-loading">טוען פגישות…</p>';
+    const list = await window.RacheliStore.listAppointments();
+    wrap.innerHTML = '';
+
+    if (!list.length) {
+      const empty = document.createElement('p');
+      empty.className = 'admin-appt-empty';
+      empty.textContent = 'אין עדיין פגישות שנקבעו דרך האתר';
+      wrap.appendChild(empty);
+      return;
+    }
+
+    const container = document.createElement('div');
+    container.className = 'admin-appt-list';
+    list.forEach((apt) => {
+      const item = document.createElement('div');
+      item.className = 'admin-appt-item';
+      const contextLine = apt.context ? `<br><span class="admin-appt-context">נושא: ${escapeHtml(apt.context)}</span>` : '';
+      item.innerHTML = `
+        <div class="admin-appt-when">${formatAdminDate(apt.date)} | ${apt.time}</div>
+        <div class="admin-appt-details">${escapeHtml(apt.name)} · ${escapeHtml(apt.phone)}${apt.email ? ' · ' + escapeHtml(apt.email) : ''}${contextLine}</div>
+        <button type="button" class="admin-slide-delete admin-appt-cancel">ביטול פגישה</button>
+      `;
+      item.querySelector('.admin-appt-cancel').addEventListener('click', async () => {
+        if (!confirm(`לבטל את הפגישה של ${apt.name} בתאריך ${formatAdminDate(apt.date)} בשעה ${apt.time}?`)) return;
+        try {
+          await window.RacheliStore.cancelAppointment(apt.id);
+          await renderAppointments();
+        } catch (e) {
+          alert('שגיאה בביטול הפגישה - נסי שוב');
+        }
+      });
+      container.appendChild(item);
+    });
+    wrap.appendChild(container);
+  }
+
   function initTabs() {
     const tabs = Array.from(document.querySelectorAll('.admin-tab'));
+    const resetBtn = document.getElementById('admin-reset');
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         const target = tab.dataset.adminTab;
@@ -401,6 +561,8 @@
         document.querySelectorAll('.admin-panel').forEach((panel) => {
           panel.hidden = panel.dataset.adminPanel !== target;
         });
+        if (resetBtn) resetBtn.hidden = target === 'appointments';
+        if (target === 'appointments') renderAppointments();
       });
     });
   }
@@ -412,11 +574,24 @@
     await renderFlatAll('feed');
     brideSlides = await loadFlat('bride_journey', window.RacheliStore.DEFAULT_BRIDE_JOURNEY);
     await renderFlatAll('bride');
+    await loadHours();
+    renderHours();
+    renderBlockedDates();
     initTabs();
+
+    document.getElementById('admin-hours-reset').addEventListener('click', async () => {
+      if (!confirm('לשחזר את שעות הפעילות לברירת המחדל? התאריכים החסומים לא יימחקו.')) return;
+      const prevBlocked = Array.isArray(hoursConfig.blockedDates) ? hoursConfig.blockedDates : [];
+      hoursConfig = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_HOURS));
+      hoursConfig.blockedDates = prevBlocked; /* התאריכים החסומים מנוהלים בנפרד ולא מתאפסים כאן */
+      await persistHours();
+      renderHours();
+    });
 
     document.getElementById('admin-reset').addEventListener('click', async () => {
       const activeTab = document.querySelector('.admin-tab.active');
       const target = activeTab ? activeTab.dataset.adminTab : 'stories';
+      if (target === 'appointments') return;
       const labels = { stories: 'הסטוריז', feed: 'הפיד', bride: 'קרוסלת "אני כלה"' };
       if (!confirm(`לאפס את ${labels[target]} לברירת המחדל? פעולה זו תמחק את כל העריכות שהועלו בדפדפן הזה בחלק הזה בלבד.`)) return;
       if (target === 'feed') {

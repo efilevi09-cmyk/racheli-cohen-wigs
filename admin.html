@@ -37,6 +37,7 @@
       <button type="button" class="admin-tab active" data-admin-tab="stories" role="tab" aria-selected="true">סטוריז (העיגולים)</button>
       <button type="button" class="admin-tab" data-admin-tab="feed" role="tab" aria-selected="false">פיד</button>
       <button type="button" class="admin-tab" data-admin-tab="bride" role="tab" aria-selected="false">אני כלה</button>
+      <button type="button" class="admin-tab" data-admin-tab="appointments" role="tab" aria-selected="false">פגישות</button>
     </div>
 
     <div class="admin-panel" data-admin-panel="stories">
@@ -67,6 +68,33 @@
       <div id="admin-bride">
         <p class="admin-loading">טוען תוכן…</p>
       </div>
+    </div>
+
+    <div class="admin-panel" data-admin-panel="appointments" hidden>
+      <div class="admin-section-head">
+        <div>
+          <h2>שעות פעילות</h2>
+          <p>הגדירי באילו ימים ושעות ניתן לקבוע תור - טופס קביעת הפגישה באתר יציג ללקוחה רק שעות פנויות בהתאם להגדרה כאן.</p>
+        </div>
+        <button type="button" class="btn-ghost" id="admin-hours-reset" style="font-size:12.5px;padding:8px 16px;">שחזור שעות לברירת מחדל</button>
+      </div>
+      <div id="admin-hours"><p class="admin-loading">טוען שעות…</p></div>
+
+      <div class="admin-section-head" style="margin-top:34px;">
+        <div>
+          <h2>תאריכים חסומים</h2>
+          <p>תאריכים ספציפיים שבהם לא יתקבלו תורים כלל (חגים, חופשה וכדומה), גם אם היום הזה בדרך כלל פתוח.</p>
+        </div>
+      </div>
+      <div id="admin-blocked-dates"></div>
+
+      <div class="admin-section-head" style="margin-top:34px;">
+        <div>
+          <h2>פגישות קרובות</h2>
+          <p>כל הפגישות שנקבעו דרך טופס קביעת הפגישה באתר, ממוינות לפי תאריך ושעה.</p>
+        </div>
+      </div>
+      <div id="admin-appointments"><p class="admin-loading">טוען פגישות…</p></div>
     </div>
 
     <div class="admin-save-bar">

@@ -156,6 +156,57 @@
 .admin-check-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--black); cursor: pointer; }
 .admin-check-label input { accent-color: var(--rose-1); width: 15px; height: 15px; }
 
+/* ---------------- לוז פגישות: שעות פעילות, תאריכים חסומים, רשימת פגישות ---------------- */
+.admin-hours-row {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 12px 16px; margin-bottom: 10px;
+}
+.admin-hours-day {
+  width: 64px; flex-shrink: 0; font-weight: 700; font-size: 13.5px; color: var(--black);
+}
+.admin-hours-times { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.admin-time-input {
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+  font-family: var(--font-ui); font-size: 13px; color: var(--black);
+}
+.admin-time-input:focus { outline: none; border-color: var(--rose-1); }
+.admin-time-input:disabled { opacity: .5; cursor: not-allowed; }
+.admin-hours-closed { font-size: 12.5px; color: var(--gray-text); }
+.admin-slot-minutes-row {
+  display: flex; align-items: center; gap: 10px; margin: 14px 0 18px; font-size: 13px; color: var(--black);
+}
+
+.admin-blocked-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.admin-blocked-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--pink-pale); border: 1px solid #fcdfe4; border-radius: 99px;
+  padding: 6px 8px 6px 14px; font-size: 13px; color: #5c4040;
+}
+.admin-blocked-chip button {
+  width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--rose-1); color: var(--white);
+  cursor: pointer; font-size: 12px; line-height: 1; display: grid; place-items: center;
+}
+.admin-blocked-add { display: flex; align-items: center; gap: 10px; }
+
+.admin-appt-list { display: flex; flex-direction: column; gap: 10px; }
+.admin-appt-item {
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 12px 16px; box-shadow: var(--shadow-soft);
+}
+.admin-appt-when {
+  font-weight: 700; font-size: 13.5px; color: var(--rose-2); white-space: nowrap; min-width: 150px;
+}
+.admin-appt-details { flex: 1 1 220px; font-size: 13px; color: var(--black); line-height: 1.6; }
+.admin-appt-details .admin-appt-context { color: var(--gray-text); }
+.admin-appt-empty { color: var(--gray-text); padding: 20px 0; text-align: center; font-size: 13.5px; }
+
+@media (max-width: 560px) {
+  .admin-hours-row { flex-direction: column; align-items: stretch; }
+  .admin-appt-item { flex-direction: column; align-items: stretch; }
+}
+
 @media (max-width: 560px) {
   .admin-head { flex-direction: column; }
   .admin-slide { flex-direction: column; }

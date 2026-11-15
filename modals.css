@@ -116,6 +116,16 @@
   direction: rtl; /* דפדפנים נוטים לכפות LTR על שדות tel/email/date/time, מה שהופך את הנקודותיים בפלייסהולדר */
 }
 .field input::placeholder { color: rgba(0,0,0,.35); }
+.field select {
+  width: 100%; border: none; outline: none; background: transparent;
+  font-family: var(--font-ui); font-size: 14px; text-align: center; color: var(--black);
+  direction: rtl; appearance: none; cursor: pointer;
+}
+.field select:disabled { color: rgba(0,0,0,.4); cursor: not-allowed; }
+.field-hint {
+  font-size: 12.5px; color: var(--rose-2); text-align: center;
+  margin: -6px 0 14px;
+}
 
 .consent-row {
   display: flex; align-items: center; justify-content: center; gap: 8px;

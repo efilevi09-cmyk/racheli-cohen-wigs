@@ -205,9 +205,10 @@
             <div class="field"><input type="text" dir="rtl" id="apt-name" placeholder="שם:" required></div>
           </div>
           <div class="field-row">
-            <div class="field"><input type="text" dir="rtl" id="apt-date" placeholder="תאריך פנוי:" onfocus="(this.type='date')" required></div>
-            <div class="field"><input type="text" dir="rtl" id="apt-time" placeholder="שעה מועדפת:" onfocus="(this.type='time')"></div>
+            <div class="field"><input type="date" dir="rtl" id="apt-date" required></div>
+            <div class="field"><select id="apt-time" required disabled><option value="">בחרי תאריך תחילה</option></select></div>
           </div>
+          <p class="field-hint" id="apt-slots-hint" hidden></p>
           <div class="field-row">
             <div class="field"><input type="email" dir="rtl" id="apt-email" placeholder="מייל:"></div>
           </div>
@@ -215,7 +216,7 @@
             <input type="checkbox" required>
             מאשרת תקנון האתר ושמירת פרטי יצירת הקשר
           </label>
-          <button type="submit" class="btn-primary">קביעת פגישה</button>
+          <button type="submit" class="btn-primary" id="apt-submit-btn">קביעת פגישה</button>
         </form>
       </div>
     </div>
@@ -279,22 +280,98 @@
       });
     }
 
+    initAppointmentScheduling();
+  }
+
+  /* ---------------- טופס קביעת הפגישה הציבורי: תאריך + רשימת שעות פנויות אמיתית מהשרת ---------------- */
+  let rcHoursConfigCache = null; /* נטען פעם אחת ונשמר בזיכרון למשך כל טעינת העמוד */
+  async function getHoursConfigCached() {
+    if (rcHoursConfigCache) return rcHoursConfigCache;
+    const stored = window.RacheliStore ? await window.RacheliStore.getHours() : null;
+    rcHoursConfigCache = stored || DEFAULT_HOURS;
+    return rcHoursConfigCache;
+  }
+
+  function initAppointmentScheduling() {
+    const dateInput = document.getElementById('apt-date');
+    const timeSelect = document.getElementById('apt-time');
+    const hint = document.getElementById('apt-slots-hint');
     const form = document.getElementById('appointment-form');
-    if (form) {
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const name = document.getElementById('apt-name').value.trim();
-        const phone = document.getElementById('apt-phone').value.trim();
-        const email = document.getElementById('apt-email').value.trim();
-        const dateVal = document.getElementById('apt-date').value;
-        const timeVal = document.getElementById('apt-time').value;
-        const location = 'הסטודיו של רחלי כהן';
-        const context = window._rcAptContext || '';
+    if (!dateInput || !timeSelect || !form) return;
+
+    const today = new Date();
+    dateInput.min = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+
+    async function loadSlotsForDate(dateVal) {
+      timeSelect.innerHTML = '';
+      if (!dateVal) {
+        timeSelect.disabled = true;
+        timeSelect.innerHTML = '<option value="">בחרי תאריך תחילה</option>';
+        hint.hidden = true;
+        return;
+      }
+      timeSelect.disabled = true;
+      timeSelect.innerHTML = '<option value="">טוענת שעות פנויות...</option>';
+      hint.hidden = true;
+
+      const hours = await getHoursConfigCached();
+      const d = new Date(dateVal + 'T00:00:00');
+      const dayConfig = hours.days ? hours.days[d.getDay()] : null;
+      const isBlocked = Array.isArray(hours.blockedDates) && hours.blockedDates.includes(dateVal);
+
+      if (isBlocked || !dayConfig || !dayConfig.open) {
+        timeSelect.innerHTML = '<option value="">אין קבלה בתאריך זה</option>';
+        hint.hidden = false;
+        hint.textContent = 'רחלי לא מקבלת תורים בתאריך הזה - נא לבחור תאריך אחר.';
+        return;
+      }
+
+      const allSlots = computeDaySlots(dayConfig, hours.slotMinutes);
+      const taken = window.RacheliStore ? await window.RacheliStore.getTakenSlots(dateVal) : [];
+      const isToday = dateVal === dateInput.min;
+      const nowMinutes = today.getHours() * 60 + today.getMinutes();
+      const available = allSlots.filter((t) => !taken.includes(t) && !(isToday && timeToMinutes(t) <= nowMinutes));
+
+      if (!available.length) {
+        timeSelect.innerHTML = '<option value="">אין שעות פנויות בתאריך זה</option>';
+        hint.hidden = false;
+        hint.textContent = 'כל השעות בתאריך זה תפוסות - נא לבחור תאריך אחר.';
+        return;
+      }
+
+      timeSelect.disabled = false;
+      timeSelect.innerHTML = '<option value="">בחרי שעה</option>' + available.map((t) => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    dateInput.addEventListener('change', () => loadSlotsForDate(dateInput.value));
+    window._rcLoadSlotsForDate = loadSlotsForDate;
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name = document.getElementById('apt-name').value.trim();
+      const phone = document.getElementById('apt-phone').value.trim();
+      const email = document.getElementById('apt-email').value.trim();
+      const dateVal = dateInput.value;
+      const timeVal = timeSelect.value;
+      const location = 'הסטודיו של רחלי כהן';
+      const context = window._rcAptContext || '';
+
+      if (!dateVal || !timeVal) {
+        showToast('נא לבחור תאריך ושעה פנויה');
+        return;
+      }
+
+      const submitBtn = document.getElementById('apt-submit-btn');
+      const originalLabel = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'קובעת...';
+
+      try {
+        await window.RacheliStore.bookAppointment({ date: dateVal, time: timeVal, name, phone, email, context });
 
         document.getElementById('thanks-name').textContent = name ? name : 'איזה';
-
         const dateLabel = formatHebDate(dateVal);
-        const timeLabel = timeVal || 'לתיאום טלפוני';
+        const timeLabel = timeVal;
         const contextLine = context ? `<br>נושא הפגישה: ${context}` : '';
         document.getElementById('thanks-meta').innerHTML =
           `הפגישה שלך עם רחלי<br>יום ותאריך: ${dateLabel} | שעה: ${timeLabel} | מיקום: ${location}${contextLine}`;
@@ -308,8 +385,20 @@
 
         closeAllModals();
         openModal('thanks');
-      });
-    }
+        form.reset();
+        loadSlotsForDate('');
+      } catch (err) {
+        if (err && err.code === 'slot-taken') {
+          showToast('מצטערים, השעה הזו נתפסה הרגע - נא לבחור שעה אחרת');
+          loadSlotsForDate(dateVal);
+        } else {
+          showToast('משהו השתבש, נסי שוב בעוד רגע');
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+      }
+    });
   }
 
   function pad2(n) { return String(n).padStart(2, '0'); }
@@ -728,6 +817,39 @@
   ];
   let BRIDE_JOURNEY = DEFAULT_BRIDE_JOURNEY;
 
+  /* ---------------- לוז פגישות: שעות פעילות ברירת מחדל (בשימוש גם באדמין וגם בטופס קביעת הפגישה) ----------------
+     days: 0=ראשון ... 6=שבת (תואם ל-Date.prototype.getDay()) */
+  const DAY_NAMES_HE = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  const DEFAULT_HOURS = {
+    slotMinutes: 30,
+    days: {
+      0: { open: true, from: '10:00', to: '19:00' },
+      1: { open: true, from: '10:00', to: '19:00' },
+      2: { open: true, from: '10:00', to: '19:00' },
+      3: { open: true, from: '10:00', to: '19:00' },
+      4: { open: true, from: '10:00', to: '14:00' },
+      5: { open: false, from: '', to: '' },
+      6: { open: false, from: '', to: '' },
+    },
+    blockedDates: [],
+  };
+  function timeToMinutes(t) {
+    const [h, m] = String(t || '0:0').split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  }
+  function minutesToTime(mins) {
+    return pad2(Math.floor(mins / 60)) + ':' + pad2(mins % 60);
+  }
+  function computeDaySlots(dayConfig, slotMinutes) {
+    if (!dayConfig || !dayConfig.open || !dayConfig.from || !dayConfig.to) return [];
+    const start = timeToMinutes(dayConfig.from);
+    const end = timeToMinutes(dayConfig.to);
+    const step = slotMinutes > 0 ? slotMinutes : 30;
+    const slots = [];
+    for (let t = start; t + step <= end; t += step) slots.push(minutesToTime(t));
+    return slots;
+  }
+
   const STORY_DURATION = 5000;
   const VIDEO_FALLBACK_DURATION = 8000;
   let TOPICS = DEFAULT_TOPICS;
@@ -792,9 +914,71 @@
        בשימוש עבור הפיד ("feed") וקרוסלת "אני כלה" ("bride_journey") */
     async function getContent(key) { return apiGetCollection(key); }
     async function setContent(key, data) { return apiSetCollection(key, data); }
+
+    /* ---------------- לוז פגישות: שעות פעילות + קביעה/ביטול תורים ---------------- */
+    async function getHours() {
+      try {
+        const res = await fetch(RC_API_BASE + '/api/hours', { cache: 'no-store' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.data || null;
+      } catch (e) { return null; }
+    }
+    async function setHours(hours) {
+      const res = await fetch(RC_API_BASE + '/api/hours', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': RC_ADMIN_TOKEN },
+        body: JSON.stringify(hours),
+      });
+      if (!res.ok) throw new Error('rc-hours-save-failed');
+    }
+    async function getTakenSlots(date) {
+      try {
+        const res = await fetch(RC_API_BASE + '/api/appointments/taken?date=' + encodeURIComponent(date), { cache: 'no-store' });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.taken || [];
+      } catch (e) { return []; }
+    }
+    async function bookAppointment(payload) {
+      const res = await fetch(RC_API_BASE + '/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      let data = null;
+      try { data = await res.json(); } catch (e) {}
+      if (res.status === 409) {
+        const err = new Error('rc-slot-taken');
+        err.code = 'slot-taken';
+        throw err;
+      }
+      if (!res.ok) throw new Error('rc-book-failed');
+      return data && data.appointment;
+    }
+    async function listAppointments() {
+      try {
+        const res = await fetch(RC_API_BASE + '/api/appointments', {
+          cache: 'no-store',
+          headers: { 'X-Admin-Token': RC_ADMIN_TOKEN },
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.data || [];
+      } catch (e) { return []; }
+    }
+    async function cancelAppointment(id) {
+      const res = await fetch(RC_API_BASE + '/api/appointments/' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'X-Admin-Token': RC_ADMIN_TOKEN },
+      });
+      if (!res.ok) throw new Error('rc-cancel-failed');
+    }
+
     return {
       getTopics, setTopics, putMedia, getMedia, deleteMedia, getContent, setContent,
-      DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY,
+      getHours, setHours, getTakenSlots, bookAppointment, listAppointments, cancelAppointment,
+      DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY, DEFAULT_HOURS,
     };
   })();
   window.RacheliStore = RCStore;
