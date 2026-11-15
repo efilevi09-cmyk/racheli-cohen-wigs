@@ -101,6 +101,30 @@
   display: block;
   color: var(--rose-2);
 }
+/* ---------- הירו - פריסת שולחן-עבודה (תמונה + טקסט זה לצד זה) ---------- */
+@media (min-width: 761px) {
+  .about-hero {
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(32px, 5vw, 76px);
+    padding: 56px 24px 0;
+    overflow: hidden;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .about-hero-media {
+    flex: 0 0 auto;
+    width: min(400px, 40%);
+    margin: 0;
+    align-self: flex-end;
+  }
+  .about-hero-photo {
+    aspect-ratio: 3/4;
+    border-radius: var(--radius-lg);
+  }
+  .about-hero-text { flex: 1 1 auto; padding: 0; }
+  .about-stats { margin-top: 44px; }
+}
+
 .about-hero-lede {
   margin-top: 18px;
   font-size: 16px;
