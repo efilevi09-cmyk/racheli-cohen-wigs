@@ -70,6 +70,12 @@
     return window.RC_SPA ? '#' + route : route + '.html';
   }
 
+  /* קישור לדף מאמר יחיד - קיים כרגע רק באתר הסטטי (article.html?id=...); בגרסת ה-SPA
+     (הארטיפקט) עדיין אין דף מאמר נפרד, כך שממשיכים להפנות לדף רשימת המאמרים */
+  function articleHref(id) {
+    return window.RC_SPA ? rcHref('articles') : 'article.html?id=' + encodeURIComponent(id);
+  }
+
   function mountRail() {
     const el = document.getElementById('icon-rail');
     if (!el) return;
@@ -455,7 +461,7 @@
       return;
     }
     holder.innerHTML = matches.map((a) => `
-      <a class="search-result" href="${rcHref('articles')}" data-open-article="${a.id}">
+      <a class="search-result" href="${articleHref(a.id)}" data-open-article="${a.id}">
         <img src="${a.img}" alt="">
         <span class="search-result-body">
           <strong>${a.title}</strong>
@@ -651,6 +657,7 @@
     isArticleSaved: isArticleSaved,
     toggleArticleSaved: toggleArticleSaved,
     initArticlesPage: initArticlesPage,
+    initArticlePage: initArticlePage,
     initHeadingEffects: initHeadingEffects,
     initMiscLikeButtons: initMiscLikeButtons,
     initRevealAnimations: initRevealAnimations,
@@ -1348,12 +1355,66 @@
   }
 
   const ARTICLES = [
-    { id: 'mistakes-first-wig', tag: 'טיפים', img: 'assets/articles_card_00.jpg', title: '3 טעויות נפוצות בבחירת הפאה הראשונה', excerpt: 'דברים קטנים שעושים הבדל גדול בתוצאה', likes: 128 },
-    { id: 'first-meeting-guide', tag: 'כלות', img: 'assets/articles_card_01.jpg', title: 'המדריך המלא לפגישה הראשונה', excerpt: 'כך להגיע מוכנה, בטוחה ורגועה', likes: 19 },
-    { id: 'perfect-match', tag: 'לפני ואחרי', img: 'assets/articles_card_02.jpg', title: 'התאמה מושלמת עושה את כל ההבדל', excerpt: 'סיפור של שיער, ביטחון ותחושת שלמות', likes: 142 },
-    { id: 'timeless-styles', tag: 'השראה', img: 'assets/articles_card_10.jpg', title: 'סגנונות אהובים שלא יוצאים מהאופנה', excerpt: 'גלי השראה לגראות יומיומית ומיוחדת', likes: 67 },
-    { id: 'gentle-look-story', tag: 'סיפורים', img: 'assets/articles_card_11.jpg', title: 'היא רצתה מראה עדין וקיבלה את עצמה מחדש', excerpt: 'סיפור כלה שמרגש אותנו בכל פעם מחדש', likes: 94 },
-    { id: 'keep-wig-fresh', tag: 'טיפים', img: 'assets/articles_card_12.jpg', title: 'איך לשמור על הפאה שלך נראית חדשה לאורך זמן', excerpt: '7 טיפים פשוטים לשגרת טיפול נכונה', likes: 83 },
+    { id: 'mistakes-first-wig', tag: 'טיפים', img: 'assets/articles_card_00.jpg', title: '3 טעויות נפוצות בבחירת הפאה הראשונה', excerpt: 'דברים קטנים שעושים הבדל גדול בתוצאה', likes: 128, body: [
+      'הרגע שבו בוחרות פאה בפעם הראשונה הוא רגע גדול - ולא פלא שהוא גם מלא בהתלבטויות. רוב הטעויות שאני רואה שוב ושוב לא קשורות לטעם רע או לבחירה "לא נכונה", אלא לכמה הרגלים שקל מאוד לתקן ברגע שמכירים אותם.',
+      '<h2>1. לבחור לפי תמונה, לא לפי מבנה הפנים</h2>',
+      'פאה שנראית מדהים על מישהי אחרת לא בהכרח תעבוד בשבילך. לפני הצבע והסגנון, השאלה הראשונה היא איזה מבנה פאה מתאים לצורת הפנים, לקו השיער הטבעי ולאופן שבו את רגילה לסדר שיער. זו הסיבה שאני תמיד מתחילה פגישה בהקשבה ובמדידה, לא בקטלוג.',
+      '<h2>2. להתפשר על איכות הלייס כדי לחסוך</h2>',
+      'לייס קדמי טוב הוא ההבדל בין פאה שנראית "פאה" לבין פאה שנראית כמו קו השיער שלך. זה לא המקום לקצץ - גם אם זה אומר לחכות עוד קצת ולבחור נכון מההתחלה.',
+      '<h2>3. לא לדבר על שגרת היום-יום</h2>',
+      'הפאה שתלווה אותך כל יום צריכה להתאים לשגרה שלך - ספורט, עבודה, מזג אוויר, שינה. ככל שתספרי לי יותר על איך נראה היום שלך, כך אדע להתאים לך בדיוק את מה שתוכלי לחיות בו בנוחות, לא רק להתרשם ממנו ביום הרכישה.',
+      'הכי חשוב לזכור: אין "טעות" שאי אפשר לתקן. גם אם כבר בחרת פאה ומשהו לא מרגיש מדויק, תמיד אפשר לשבת ולכוון מחדש.',
+    ] },
+    { id: 'first-meeting-guide', tag: 'כלות', img: 'assets/articles_card_01.jpg', title: 'המדריך המלא לפגישה הראשונה', excerpt: 'כך להגיע מוכנה, בטוחה ורגועה', likes: 19, body: [
+      'הפגישה הראשונה שלנו היא לא מבחן - היא שיחה. המטרה שלי היא להכיר אותך, את הסגנון שלך ואת מה שחשוב לך, כדי שביחד נגיע לפאה שתרגישי בה הכי נכון.',
+      '<h2>מה כדאי להביא איתך</h2>',
+      'אם יש לך תמונות השראה - גם כאלה שמראות מה את *לא* אוהבת - הביאי אותן. תמונה של עצמך עם שיער טבעי (גם ישנה) עוזרת לי להבין את קו השיער ואת הגוון שהכי התאים לך.',
+      '<h2>מה קורה בפגישה עצמה</h2>',
+      'מתחילות בשיחה קצרה על הסגנון והצרכים, עוברות למדידת מבנה הראש, ובוחרות יחד גוון, אורך ותנועה. אין לחץ להחליט הכל באותו רגע - זו פגישת היכרות, לא רק פגישת מכירה.',
+      '<h2>לכלות בפרט</h2>',
+      'אם את מתחתנת, הכי טוב להגיע לפגישה הראשונה לפחות כמה חודשים לפני החתונה, כדי שיהיה מספיק זמן להתאמה מדויקת ולכל תהליך ההכנה - בלי לחץ של זמן בשבוע שלפני.',
+      'ובסוף - תמיד אפשר לשאול הכל. אין שאלה "קטנה מדי" כשמדובר בדבר שתלווה אותך כל יום.',
+    ] },
+    { id: 'perfect-match', tag: 'לפני ואחרי', img: 'assets/articles_card_02.jpg', title: 'התאמה מושלמת עושה את כל ההבדל', excerpt: 'סיפור של שיער, ביטחון ותחושת שלמות', likes: 142, body: [
+      'יש רגע שבו לקוחה מסתכלת במראה אחרי ההתאמה הסופית ומשהו משתנה - לא רק במראה, אלא בעמידה, בחיוך, באופן שבו היא מדברת. זו התחושה שאני עובדת בשבילה בכל פגישה.',
+      'ההבדל בין פאה "יפה" לפאה "מושלמת בשבילך" הוא כמעט תמיד בפרטים הקטנים: הדילול הנכון, זווית החיתוך סביב הפנים, האופן שבו הקו הקדמי נופל. אלה הדברים שלא רואים בתמונה, אבל מרגישים בכל רגע.',
+      'לכן תהליך ההתאמה אצלי הוא לא פגישה אחת - הוא תהליך. בודקות, מתקנות, שואלות איך מרגישים בתנועה, בשינה, ברוח - ורק כשהכל בדיוק נכון, אנחנו קוראות לזה גמר.',
+      'כי פאה מותאמת באמת היא לא כזו שרואים - היא כזו ששוכחים שיש, ופשוט מרגישים בה את עצמך.',
+    ] },
+    { id: 'timeless-styles', tag: 'השראה', img: 'assets/articles_card_10.jpg', title: 'סגנונות אהובים שלא יוצאים מהאופנה', excerpt: 'גלי השראה לגראות יומיומית ומיוחדת', likes: 67, body: [
+      'טרנדים מגיעים והולכים, אבל יש סגנונות מסוימים שחוזרים שוב ושוב - כי הם פשוט עובדים, על כל סוגי הפנים ובכל גיל.',
+      '<h2>גלים רכים וטבעיים</h2>',
+      'תנועה עדינה שלא נראית "מעוצבת מדי" היא תמיד בחירה בטוחה - מתאימה גם ליומיום וגם לאירוע, וזו הסיבה שהיא הכי מבוקשת אצלי שוב ושוב.',
+      '<h2>אורך בינוני עם שכבות</h2>',
+      'אורך שמגיע קצת מתחת לכתפיים עם שכבות עדינות נותן תחושת נפח בלי להכביד - ומאפשר הרבה גמישות בסידור.',
+      '<h2>גוונים טבעיים עם עומק</h2>',
+      'גם כשבוחרים גוון "בסיסי", הוספת שכבת גוון שנייה עדינה יוצרת עומק שגורם לשיער להיראות חי ואמיתי, לא שטוח.',
+      'הסוד האמיתי מאחורי "סגנון נצחי" הוא לא העדר שינוי - הוא התאמה אישית שלא מתיישנת כי היא נבנתה בשבילך ולא בשביל הטרנד הרגעי.',
+    ] },
+    { id: 'gentle-look-story', tag: 'סיפורים', img: 'assets/articles_card_11.jpg', title: 'היא רצתה מראה עדין וקיבלה את עצמה מחדש', excerpt: 'סיפור כלה שמרגש אותנו בכל פעם מחדש', likes: 94, body: [
+      'היא הגיעה אליי כמה חודשים לפני החתונה, עם תמונה אחת בטלפון ומשפט אחד: "אני רוצה להרגיש כמו עצמי, רק יותר".',
+      'ישבנו, דיברנו על איך נראתה השגרה שלה, על השיער שהיא זוכרת מילדותה, על מה שתמיד רצתה לנסות ולא העזה. מתוך השיחה הזאת נולד הכיוון - לא פאה "של כלה", אלא פאה שהיא היא, רק בגרסה החגיגית ביותר שלה.',
+      'בפגישת ההתאמה האחרונה, כמה ימים לפני החתונה, היא עמדה מול המראה ושתקה רגע ארוך. ואז אמרה: "זה בדיוק אני. רק יותר אני".',
+      'זו בשבילי ההגדרה האמיתית של פאה מוצלחת - לא כזו שמסתירה, אלא כזו שמשחררת.',
+    ] },
+    { id: 'keep-wig-fresh', tag: 'טיפים', img: 'assets/articles_card_12.jpg', title: 'איך לשמור על הפאה שלך נראית חדשה לאורך זמן', excerpt: '7 טיפים פשוטים לשגרת טיפול נכונה', likes: 83, body: [
+      'טיפוח נכון הוא ההבדל בין פאה ששומרת על המראה שלה שנים, לבין אחת שמתעייפת תוך כמה חודשים. הנה שגרה פשוטה שבאמת עושה את ההבדל:',
+      '<h2>1. מברשת מתאימה</h2>',
+      'מברשת רחבת שיניים, עדינה, מתחילה מהקצוות ועולה כלפי מעלה - אף פעם לא מהשורש כלפי מטה.',
+      '<h2>2. שטיפה במים פושרים</h2>',
+      'מים חמים מדי מקצרים את חיי הסיבים. תמיד פושרים, ועם שמפו ומרכך שמיועדים לפאות.',
+      '<h2>3. ייבוש באוויר</h2>',
+      'הניחי לפאה להתייבש באוויר על סטנד, הרחק ממקור חום ישיר.',
+      '<h2>4. אחסון נכון</h2>',
+      'על סטנד, במקום מאוורר, הרחק משמש ישירה - זה שומר על התנועה והצורה הטבעית.',
+      '<h2>5. ביקור תחזוקה</h2>',
+      'ביקור תקופתי אצלי לדילול וחידוד הקווים שומר על המראה הטבעי הרבה יותר זמן.',
+      '<h2>6. פחות מגע ביד</h2>',
+      'ככל שפחות נוגעים ומסדרים ביד לאורך היום, הסיבים נשמרים טוב יותר.',
+      '<h2>7. סבלנות בהסתרכות</h2>',
+      'קשרים קטנים כדאי לפתוח בעדינות מהקצה, לא למשוך מהשורש - זה מונע נשירה מיותרת של סיבים.',
+      'שגרה פשוטה כזו, חמש דקות ביום, שומרת על הפאה נראית בדיוק כמו ביום שקנית אותה.',
+    ] },
   ];
 
   function renderArticlesGrid(filter) {
@@ -1368,7 +1429,7 @@
       const saved = isArticleSaved(a.id);
       return `
         <article class="article-card" data-id="${a.id}">
-          <a class="article-media" href="#" data-open-article="${a.id}">
+          <a class="article-media" href="${articleHref(a.id)}" data-open-article="${a.id}">
             <img src="${a.img}" alt="${a.title}" loading="lazy">
             <span class="article-type-badge">${svg('photo')}</span>
             <span class="article-tag">${a.tag}</span>
@@ -1412,7 +1473,6 @@
         }
       });
     });
-    grid.querySelectorAll('[data-open-article]').forEach((a) => a.addEventListener('click', (e) => e.preventDefault()));
   }
 
   function initArticlesPage() {
@@ -1425,6 +1485,107 @@
       });
     });
     renderArticlesGrid('my-feed');
+  }
+
+  /* ---------------- דף מאמר יחיד (article.html?id=...) ---------------- */
+  function renderArticleBody(paragraphs) {
+    return (paragraphs || []).map((p) => (p.indexOf('<h2>') === 0 ? p : `<p>${p}</p>`)).join('\n');
+  }
+
+  function initArticlePage() {
+    const holder = document.getElementById('article-content');
+    if (!holder) return;
+    const id = new URLSearchParams(location.search).get('id');
+    const article = ARTICLES.find((a) => a.id === id);
+
+    if (!article) {
+      holder.innerHTML = `
+        <div class="article-notfound">
+          <h1>המאמר לא נמצא</h1>
+          <p>יכול להיות שהקישור שגוי, או שהמאמר כבר לא קיים.</p>
+          <a class="btn-primary" href="${rcHref('articles')}">חזרה לעולם התוכן</a>
+        </div>`;
+      document.title = 'מאמר לא נמצא | רחלי כהן';
+      return;
+    }
+
+    document.title = article.title + ' | רחלי כהן';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', article.excerpt);
+
+    const saved = isArticleSaved(article.id);
+    holder.innerHTML = `
+      <article class="article-single">
+        <a class="article-back" href="${rcHref('articles')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          עולם תוכן
+        </a>
+        <span class="article-tag article-tag--static">${article.tag}</span>
+        <h1 class="article-single-title">${article.title}</h1>
+        <p class="article-single-excerpt">${article.excerpt}</p>
+        <div class="article-single-meta">
+          <span class="article-likes">${svg('heart')}${article.likes}</span>
+          <span class="icons">
+            <button type="button" class="article-save${saved ? ' saved' : ''}" data-save="${article.id}" aria-label="שמירת מאמר" aria-pressed="${saved}"><svg viewBox="0 0 24 24" fill="${saved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8">${ICONS.bookmark}</svg></button>
+            <button type="button" class="article-share" data-share="${article.id}" aria-label="שיתוף מאמר">${svg('share')}</button>
+          </span>
+        </div>
+        <div class="article-single-media"><img src="${article.img}" alt="${article.title}"></div>
+        <div class="article-single-body">${renderArticleBody(article.body)}</div>
+      </article>
+      <section class="article-related">
+        <h2>עוד בנושא ${article.tag}</h2>
+        <div class="articles-grid" id="article-related-grid"></div>
+      </section>`;
+
+    const saveBtn = holder.querySelector('[data-save]');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const nowSaved = toggleArticleSaved(article.id);
+        saveBtn.classList.toggle('saved', nowSaved);
+        saveBtn.setAttribute('aria-pressed', nowSaved);
+        saveBtn.querySelector('svg').setAttribute('fill', nowSaved ? 'currentColor' : 'none');
+        showToast(nowSaved ? 'נשמר למועדפים' : 'הוסר מהמועדפים');
+      });
+    }
+    const shareBtn = holder.querySelector('[data-share]');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const url = location.href;
+        const shareData = { title: 'רחלי כהן | ' + article.title, text: article.excerpt, url };
+        try {
+          if (navigator.share) { await navigator.share(shareData); return; }
+          throw new Error('no-share');
+        } catch (e) {
+          try { await navigator.clipboard.writeText(url); showToast('הקישור הועתק!'); }
+          catch (e2) { showToast(url); }
+        }
+      });
+    }
+
+    const relatedGrid = document.getElementById('article-related-grid');
+    if (relatedGrid) {
+      const related = ARTICLES.filter((a) => a.tag === article.tag && a.id !== article.id).slice(0, 3);
+      if (!related.length) {
+        relatedGrid.closest('.article-related').hidden = true;
+      } else {
+        relatedGrid.innerHTML = related.map((a) => `
+          <article class="article-card" data-id="${a.id}">
+            <a class="article-media" href="${articleHref(a.id)}">
+              <img src="${a.img}" alt="${a.title}" loading="lazy">
+              <span class="article-type-badge">${svg('photo')}</span>
+              <span class="article-tag">${a.tag}</span>
+            </a>
+            <div class="article-body">
+              <h3 class="article-title">${a.title}</h3>
+              <p class="article-excerpt">${a.excerpt}</p>
+            </div>
+            <div class="meta">
+              <span class="article-likes">${svg('heart')}${a.likes}</span>
+            </div>
+          </article>`).join('');
+      }
+    }
   }
 
   /* ---------------- התחברות עם גוגל - נדרש כדי לסמן "אהבתי" על סטטוס ----------------

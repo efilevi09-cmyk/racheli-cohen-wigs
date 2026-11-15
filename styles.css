@@ -494,11 +494,11 @@ footer.site-footer .links { display: flex; gap: 18px; }
     padding: 8px 14px;
   }
   .logo { width: auto; padding: 0; }
-  /* בהאדר האופקי במובייל יש הרבה יותר רוחב פנוי מאשר בפס הצר בדסקטופ - מחזירים את הכיתוב לגודל קריא */
-  .logo-inner { flex-direction: row-reverse; gap: 8px; }
-  .logo-mark { width: 32px; height: 32px; font-size: 11px; }
-  .logo-text .en1 { font-size: 13px; letter-spacing: 1px; }
-  .logo-tagline { font-size: 9px; }
+  /* אותה פריסה מחולקת ל-3 כמו בדסקטופ (עיגול, שם, סלוגן זה מתחת לזה) - רק בגדלים קריאים יותר
+     להאדר האופקי הרחב יותר במובייל */
+  .logo-mark { width: 34px; height: 34px; font-size: 12px; }
+  .logo-text .en1 { font-size: 11px; letter-spacing: .5px; }
+  .logo-tagline { font-size: 8px; }
 
   /* כפתור ההמבורגר מוצג רק במובייל - פותח את רצועת הניווט כמגירה צדדית במקום שורת אייקונים גוללת */
   .nav-toggle { display: flex; }
