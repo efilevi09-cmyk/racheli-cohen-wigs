@@ -975,9 +975,29 @@
       if (!res.ok) throw new Error('rc-cancel-failed');
     }
 
+    /* ---------------- מעקב צפיות אמיתי (views) - כל פריט מתחיל מ-10 ---------------- */
+    async function getViews(ids) {
+      if (!ids || !ids.length) return {};
+      try {
+        const res = await fetch(RC_API_BASE + '/api/views?ids=' + encodeURIComponent(ids.join(',')), { cache: 'no-store' });
+        if (!res.ok) return {};
+        const data = await res.json();
+        return data.counts || {};
+      } catch (e) { return {}; }
+    }
+    async function incrementView(id) {
+      try {
+        const res = await fetch(RC_API_BASE + '/api/views/' + encodeURIComponent(id), { method: 'POST' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.count;
+      } catch (e) { return null; }
+    }
+
     return {
       getTopics, setTopics, putMedia, getMedia, deleteMedia, getContent, setContent,
       getHours, setHours, getTakenSlots, bookAppointment, listAppointments, cancelAppointment,
+      getViews, incrementView,
       DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY, DEFAULT_HOURS,
     };
   })();
@@ -1242,6 +1262,59 @@
   }
 
   const EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  /* ---------------- מעקב צפיות אמיתי: שולף ספירות אמיתיות מהשרת לכל האלמנטים עם [data-view-id]
+     שמוצגים כרגע בעמוד, ואז מתחיל לרשום צפיה אמיתית אחת לכל פריט ברגע שהוא נכנס לתצוגה בגלילה
+     (פעם אחת בלבד לכל פריט בטעינת עמוד אחת - גם אם המבקרת גוללת הלוך ושוב) ---------------- */
+  const rcViewedIds = new Set();
+  let rcViewObserver = null;
+  function rcViewDisplayFor(el) { return el.querySelector('[data-view-count]') || el; }
+  async function refreshViewCounts(root) {
+    const scope = root || document;
+    const els = Array.from(scope.querySelectorAll('[data-view-id]'));
+    if (!els.length) return;
+    const ids = Array.from(new Set(els.map((el) => el.dataset.viewId)));
+    const counts = window.RacheliStore ? await window.RacheliStore.getViews(ids) : {};
+    els.forEach((el) => {
+      const c = counts[el.dataset.viewId];
+      if (typeof c === 'number') rcViewDisplayFor(el).textContent = c;
+    });
+    initViewObserver(scope);
+  }
+  function initViewObserver(scope) {
+    if (!rcViewObserver) {
+      rcViewObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          const id = el.dataset.viewId;
+          if (!id || rcViewedIds.has(id)) { rcViewObserver.unobserve(el); return; }
+          rcViewedIds.add(id);
+          rcViewObserver.unobserve(el);
+          if (window.RacheliStore) {
+            window.RacheliStore.incrementView(id).then((count) => {
+              if (typeof count === 'number') rcViewDisplayFor(el).textContent = count;
+            });
+          }
+        });
+      }, { threshold: 0.6 });
+    }
+    (scope || document).querySelectorAll('[data-view-id]').forEach((el) => {
+      if (!rcViewedIds.has(el.dataset.viewId)) rcViewObserver.observe(el);
+    });
+  }
+  /* רישום צפיה אמיתית חד-פעמית בפריט שאינו נבחן ע"י IntersectionObserver (כגון סטורי שנפתח במסך מלא) */
+  function registerSingleView(id, displayEl) {
+    if (!id) return;
+    const key = 'single:' + id;
+    if (rcViewedIds.has(key)) return;
+    rcViewedIds.add(key);
+    if (window.RacheliStore) {
+      window.RacheliStore.incrementView(id).then((count) => {
+        if (typeof count === 'number' && displayEl) displayEl.textContent = count;
+      });
+    }
+  }
   const HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20s-7-4.4-9.5-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.5 5c-2.5 4.6-9.5 9-9.5 9Z"/></svg>';
   const CALENDAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 10h16"/></svg>';
 
@@ -1256,10 +1329,11 @@
       const media = post.type === 'video'
         ? `<video src="${escapeAttrC(mediaItemSrc(post))}" muted playsinline loop autoplay></video><span class="feed-video-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>וידאו</span>`
         : `<img src="${escapeAttrC(mediaItemSrc(post))}" alt="${escapeAttrC(post.caption || '')}">`;
+      article.dataset.viewId = post.id;
       article.innerHTML = `
         ${media}
         <div class="feed-stats">
-          <span class="feed-stat feed-views">${EYE_SVG}${post.views || 0}</span>
+          <span class="feed-stat feed-views">${EYE_SVG}<b data-view-count>${post.views || 10}</b></span>
           <button type="button" class="feed-stat feed-like" data-like-id="${escapeAttrC(post.id)}" aria-pressed="false" aria-label="אהבתי">${HEART_SVG}<span>אהבתי</span></button>
           <button type="button" class="feed-stat feed-cta" data-open-modal="appointment" data-context-label="${escapeAttrC(post.caption || '')}">${CALENDAR_SVG}<span>${escapeAttrC(post.ctaLabel || 'קביעת פגישה')}</span></button>
         </div>
@@ -1269,6 +1343,7 @@
     });
     if (window.RacheliCommon && window.RacheliCommon.initMiscLikeButtons) window.RacheliCommon.initMiscLikeButtons();
     initFeedVideoAutoSound();
+    refreshViewCounts(wrap);
   }
 
   /* ---------------- וידאו בפיד: הקול נדלק אוטומטית כשסרטון מגיע לתצוגה בגלילה ---------------- */
@@ -1345,10 +1420,11 @@
         ? `<video src="${escapeAttrC(mediaItemSrc(slide))}" muted playsinline loop autoplay></video>`
         : `<img src="${escapeAttrC(mediaItemSrc(slide))}" alt="">`;
       if (slide.showStats) {
+        card.dataset.viewId = slide.id;
         card.innerHTML = `
           ${media}
           <div class="story-stats">
-            <span class="story-stat">${EYE_SVG} ${slide.views || 0}</span>
+            <span class="story-stat">${EYE_SVG} <b data-view-count>${slide.views || 10}</b></span>
             <button type="button" class="story-stat story-like" data-like-id="${escapeAttrC(slide.likeId || slide.id)}" aria-pressed="false" aria-label="אהבתי">${HEART_SVG} <span>אהבתי</span></button>
             <button type="button" class="story-stat" data-open-modal="appointment">${CALENDAR_SVG} <span>קביעת פגישה</span></button>
           </div>
@@ -1361,6 +1437,7 @@
     if (!activeSet && wrap.firstElementChild) wrap.firstElementChild.classList.add('active');
     if (window.RacheliCommon && window.RacheliCommon.initMiscLikeButtons) window.RacheliCommon.initMiscLikeButtons();
     if (window.RCJourney && window.RCJourney.init) window.RCJourney.init();
+    refreshViewCounts(wrap);
   }
 
   function escapeAttrC(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -1423,7 +1500,7 @@
               <h3 class="igstory-caption" id="igstory-caption"></h3>
               <div class="igstory-stats">
                 <button class="igstory-stat igstory-mute" id="igstory-mute" aria-label="השתקה/ביטול השתקה" hidden><svg viewBox="0 0 24 24">${ICONS.soundOn}</svg></button>
-                <span class="igstory-stat"><svg viewBox="0 0 24 24">${ICONS.eye}</svg><b id="igstory-views">220</b></span>
+                <span class="igstory-stat"><svg viewBox="0 0 24 24">${ICONS.eye}</svg><b id="igstory-views">10</b></span>
                 <button class="igstory-stat igstory-like" id="igstory-like"><svg viewBox="0 0 24 24">${ICONS.heart}</svg><span>אהבתי</span></button>
                 <button class="igstory-stat" id="igstory-share"><svg viewBox="0 0 24 24">${ICONS.share}</svg><span>שיתוף</span></button>
                 <button class="igstory-stat igstory-cta" id="igstory-cta"><svg viewBox="0 0 24 24">${ICONS.calendar}</svg><span>קביעת פגישה</span></button>
@@ -2032,7 +2109,18 @@
 
     igRenderMedia(slide);
     caption.textContent = slide.caption || '';
-    views.textContent = 200 + (igTopicIndex * 7) + (igSlideIndex * 3) + 13;
+    const viewId = 'story-' + slideKey(topic, igSlideIndex);
+    views.textContent = '…';
+    views.dataset.viewId = viewId;
+    if (window.RacheliStore) {
+      const alreadyViewed = rcViewedIds.has('single:' + viewId);
+      const promise = alreadyViewed ? window.RacheliStore.getViews([viewId]).then((c) => c[viewId]) : null;
+      if (promise) {
+        promise.then((count) => { if (views.dataset.viewId === viewId) views.textContent = count != null ? count : 10; });
+      } else {
+        registerSingleView(viewId, views);
+      }
+    }
     if (topicTag) topicTag.textContent = topic.label;
 
     const liked = likedSet().has(slideKey(topic, igSlideIndex));

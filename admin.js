@@ -99,6 +99,13 @@
     if (oldCard) oldCard.replaceWith(newCard); else wrap.appendChild(newCard);
   }
 
+  function loadRealViewCount(id, el) {
+    if (!el) return;
+    window.RacheliStore.getViews([id]).then((counts) => {
+      el.textContent = counts[id] != null ? counts[id] : 10;
+    });
+  }
+
   function cssEscape(s) { return s.replace(/"/g, '\\"'); }
   function escapeAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
   function escapeHtml(s) {
@@ -308,13 +315,12 @@
     if (!k.isBride) {
       const row1 = document.createElement('div');
       row1.className = 'admin-flat-row';
-      row1.innerHTML = `<label class="admin-check-label">צפיות: <input type="number" class="admin-num-input" min="0" value="${Number(item.views) || 0}"></label>
+      row1.innerHTML = `<span class="admin-check-label">צפיות אמיתיות: <b class="admin-views-count" data-view-id="${escapeAttr(item.id)}">…</b></span>
         <label class="admin-check-label">טקסט כפתור: <input type="text" class="admin-num-input" style="width:140px" value="${escapeAttr(item.ctaLabel || 'קביעת פגישה')}"></label>`;
-      const viewsInput = row1.querySelector('input[type="number"]');
-      viewsInput.addEventListener('input', () => { item.views = Number(viewsInput.value) || 0; k.persistDebounced(); });
       const ctaInput = row1.querySelector('input[type="text"]');
       ctaInput.addEventListener('input', () => { item.ctaLabel = ctaInput.value; k.persistDebounced(); });
       fields.appendChild(row1);
+      loadRealViewCount(item.id, row1.querySelector('.admin-views-count'));
     } else {
       const row1 = document.createElement('div');
       row1.className = 'admin-flat-row';
@@ -339,10 +345,9 @@
       if (item.showStats) {
         const row2 = document.createElement('div');
         row2.className = 'admin-flat-row';
-        row2.innerHTML = `<label class="admin-check-label">צפיות: <input type="number" class="admin-num-input" min="0" value="${Number(item.views) || 0}"></label>`;
-        const viewsInput = row2.querySelector('input[type="number"]');
-        viewsInput.addEventListener('input', () => { item.views = Number(viewsInput.value) || 0; k.persistDebounced(); });
+        row2.innerHTML = `<span class="admin-check-label">צפיות אמיתיות: <b class="admin-views-count" data-view-id="${escapeAttr(item.id)}">…</b></span>`;
         fields.appendChild(row2);
+        loadRealViewCount(item.id, row2.querySelector('.admin-views-count'));
       }
     }
 
