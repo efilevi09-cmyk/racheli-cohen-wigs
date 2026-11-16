@@ -2402,6 +2402,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', async function () {
+    /* מופעל ראשון ולפני כל await - כדי שהמעקב אחרי זמן שהייה יירשם מיד, גם אם המבקר עוזב
+       את העמוד לפני שקריאות הרשת (טעינת פיד/טופיקים וכו') להלן מסתיימות */
+    initPageAnalyticsTracking();
     mountRail();
     mountLogo();
     mountMobileNav();
@@ -2423,6 +2426,5 @@
     initMiscLikeButtons();
     initRevealAnimations();
     initHeroCollage();
-    initPageAnalyticsTracking();
   });
 })();
