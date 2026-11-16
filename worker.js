@@ -78,6 +78,10 @@ function uuid() {
 const VALID_COLLECTIONS = ['topics', 'feed', 'bride_journey'];
 const VIEWS_BASE = 10; /* כל פריט חדש "מתחיל" מ-10 צפיות, כפי שרחלי ביקשה */
 
+/* ---------- אנליטיקס צפיות עמודים: כמה פעמים נצפה כל עמוד וכמה זמן (שניות) בילו בו בסך הכול ---------- */
+function isValidPageId(s) { return typeof s === 'string' && /^[a-z0-9_-]{1,40}$/.test(s); }
+const MAX_PAGEVIEW_DURATION = 3600; /* תקרת שפיות לערך בודד - מונעת עיוות ממוצע ע"י באג/תקלה (לשונית פתוחה שעות) */
+
 /* ---------- בדיקות תקינות בסיסיות ללוז הפגישות ---------- */
 function isValidDateStr(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
 function isValidTimeStr(s) { return typeof s === 'string' && /^\d{2}:\d{2}$/.test(s); }
@@ -216,6 +220,43 @@ export default {
       const next = (current ? Number(current) : VIEWS_BASE) + 1;
       await env.RACHELI_KV.put(key, String(next));
       return json({ id: m[1], count: next }, 200, origin);
+    }
+
+    /* ---- POST /api/analytics/pageview  (ציבורי - "פינג" קצר מכל טעינת עמוד באתר: באיזה עמוד
+       ביקרו וכמה זמן (שניות) נשארו בו. נשלח מהדפדפן ברגע שעוזבים/מחליפים לשונית, לא בזמן אמת,
+       דרך navigator.sendBeacon - לכן אין כאן אימות הרשאה, בדיוק כמו /api/views למעלה) ---- */
+    if (path === '/api/analytics/pageview' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch (e) { return json({ error: 'invalid json' }, 400, origin); }
+      const { page, duration } = body || {};
+      if (!isValidPageId(page)) return json({ error: 'invalid page' }, 400, origin);
+      let seconds = Number(duration);
+      if (!Number.isFinite(seconds) || seconds < 0) return json({ error: 'invalid duration' }, 400, origin);
+      seconds = Math.min(Math.round(seconds), MAX_PAGEVIEW_DURATION);
+
+      const key = 'analytics:page:' + page;
+      const current = (await env.RACHELI_KV.get(key, 'json')) || { views: 0, totalSeconds: 0 };
+      current.views = (current.views || 0) + 1;
+      current.totalSeconds = (current.totalSeconds || 0) + seconds;
+      await env.RACHELI_KV.put(key, JSON.stringify(current));
+      return json({ ok: true }, 200, origin);
+    }
+
+    /* ---- GET /api/analytics  (אדמין בלבד - סיכום צפיות + זמן שהייה לכל עמודי האתר) ---- */
+    if (path === '/api/analytics' && request.method === 'GET') {
+      if (!requireAuth(request)) return json({ error: 'unauthorized' }, 401, origin);
+      const list = await env.RACHELI_KV.list({ prefix: 'analytics:page:' });
+      const pages = [];
+      for (const entry of list.keys) {
+        const rec = await env.RACHELI_KV.get(entry.name, 'json');
+        if (!rec) continue;
+        pages.push({
+          page: entry.name.slice('analytics:page:'.length),
+          views: rec.views || 0,
+          totalSeconds: rec.totalSeconds || 0,
+        });
+      }
+      return json({ data: pages }, 200, origin);
     }
 
     /* ---- POST /api/media  (העלאת קובץ חדש) ---- */

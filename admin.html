@@ -38,6 +38,7 @@
       <button type="button" class="admin-tab" data-admin-tab="feed" role="tab" aria-selected="false">פיד</button>
       <button type="button" class="admin-tab" data-admin-tab="bride" role="tab" aria-selected="false">אני כלה</button>
       <button type="button" class="admin-tab" data-admin-tab="appointments" role="tab" aria-selected="false">פגישות</button>
+      <button type="button" class="admin-tab" data-admin-tab="analytics" role="tab" aria-selected="false">נתוני צפיות</button>
     </div>
 
     <div class="admin-panel" data-admin-panel="stories">
@@ -95,6 +96,17 @@
         </div>
       </div>
       <div id="admin-appointments"><p class="admin-loading">טוען פגישות…</p></div>
+    </div>
+
+    <div class="admin-panel" data-admin-panel="analytics" hidden>
+      <div class="admin-section-head">
+        <div>
+          <h2>נתוני צפיות באתר</h2>
+          <p>כמה פעמים נצפה כל עמוד באתר, וכמה זמן בממוצע נשארו בו המבקרות - נאסף אוטומטית מכל ביקור באתר.</p>
+        </div>
+        <button type="button" class="btn-ghost" id="admin-analytics-refresh" style="font-size:12.5px;padding:8px 16px;">רענון</button>
+      </div>
+      <div id="admin-analytics"><p class="admin-loading">טוען נתוני צפיות…</p></div>
     </div>
 
     <div class="admin-save-bar">

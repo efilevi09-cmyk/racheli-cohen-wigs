@@ -995,14 +995,63 @@
       } catch (e) { return null; }
     }
 
+    /* ---------------- אנליטיקס צפיות עמודים: עמוד + משך שהייה (שניות) ---------------- */
+    function sendPageview(page, durationSeconds) {
+      const payload = JSON.stringify({ page, duration: durationSeconds });
+      if (navigator.sendBeacon) {
+        try {
+          const blob = new Blob([payload], { type: 'application/json' });
+          if (navigator.sendBeacon(RC_API_BASE + '/api/analytics/pageview', blob)) return;
+        } catch (e) {}
+      }
+      try {
+        fetch(RC_API_BASE + '/api/analytics/pageview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {});
+      } catch (e) {}
+    }
+    async function getAnalytics() {
+      try {
+        const res = await fetch(RC_API_BASE + '/api/analytics', {
+          cache: 'no-store',
+          headers: { 'X-Admin-Token': RC_ADMIN_TOKEN },
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.data || [];
+      } catch (e) { return []; }
+    }
+
     return {
       getTopics, setTopics, putMedia, getMedia, deleteMedia, getContent, setContent,
       getHours, setHours, getTakenSlots, bookAppointment, listAppointments, cancelAppointment,
-      getViews, incrementView,
+      getViews, incrementView, sendPageview, getAnalytics,
       DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY, DEFAULT_HOURS,
     };
   })();
   window.RacheliStore = RCStore;
+
+  /* ---------------- מעקב זמן שהייה בעמוד - נשלח פעם אחת כשעוזבים/מחליפים לשונית ---------------- */
+  function initPageAnalyticsTracking() {
+    const page = document.body && document.body.dataset ? document.body.dataset.page : '';
+    if (!page || page === 'admin') return; /* לא עוקבים אחרי ביקורי רחלי עצמה בפאנל הניהול */
+    const startedAt = Date.now();
+    let sent = false;
+    function flush() {
+      if (sent) return;
+      const seconds = Math.round((Date.now() - startedAt) / 1000);
+      if (seconds < 1) return; /* "קפיצה" מהירה מדי - לא נספר כצפייה בעלת משמעות */
+      sent = true;
+      RCStore.sendPageview(page, seconds);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') flush();
+    });
+    window.addEventListener('pagehide', flush);
+  }
 
   /* ---------------- Claude db/assets-backed cloud store (SPA artifact only) ---------------- */
   const RCCloud = (function () {
@@ -2374,5 +2423,6 @@
     initMiscLikeButtons();
     initRevealAnimations();
     initHeroCollage();
+    initPageAnalyticsTracking();
   });
 })();

@@ -552,6 +552,79 @@
     wrap.appendChild(container);
   }
 
+  /* ---------------- נתוני צפיות (אנליטיקס) ---------------- */
+  const ANALYTICS_LABELS = {
+    home: 'עמוד הבית', index: 'עמוד הבית',
+    about: 'אודות',
+    feed: 'פיד',
+    bride: 'אני כלה',
+    'new-wig': 'פאה חדשה',
+    'renew-wig': 'חידוש פאה',
+    contact: 'יצירת קשר',
+    articles: 'מאמרים (רשימה)',
+    article: 'מאמר (עמוד בודד)',
+    videos: 'סרטונים',
+    accessibility: 'נגישות',
+    terms: 'תקנון',
+  };
+
+  function formatDuration(totalSeconds) {
+    const s = Math.round(totalSeconds || 0);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h} שעות ${m} דק'`;
+    if (m > 0) return `${m} דק' ${sec} שנ'`;
+    return `${sec} שניות`;
+  }
+
+  async function renderAnalytics() {
+    const wrap = document.getElementById('admin-analytics');
+    wrap.innerHTML = '<p class="admin-loading">טוען נתוני צפיות…</p>';
+    const rows = await window.RacheliStore.getAnalytics();
+    wrap.innerHTML = '';
+
+    if (!rows.length) {
+      const empty = document.createElement('p');
+      empty.className = 'admin-appt-empty';
+      empty.textContent = 'עדיין אין נתוני צפיות - הן נאספות אוטומטית מביקורים באתר, ויופיעו כאן בקרוב';
+      wrap.appendChild(empty);
+      return;
+    }
+
+    rows.sort((a, b) => b.views - a.views);
+    const totalViews = rows.reduce((sum, r) => sum + (r.views || 0), 0);
+    const totalSeconds = rows.reduce((sum, r) => sum + (r.totalSeconds || 0), 0);
+
+    const summary = document.createElement('div');
+    summary.className = 'admin-analytics-summary';
+    summary.innerHTML = `
+      <div class="admin-analytics-stat"><b>${totalViews.toLocaleString('he-IL')}</b><span>סה"כ צפיות עמוד בכל האתר</span></div>
+      <div class="admin-analytics-stat"><b>${formatDuration(totalSeconds)}</b><span>סה"כ זמן גלישה שנאסף</span></div>
+    `;
+    wrap.appendChild(summary);
+
+    const table = document.createElement('table');
+    table.className = 'admin-analytics-table';
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>עמוד / תוכן</th><th>צפיות</th><th>זמן שהייה כולל</th><th>זמן שהייה ממוצע לצפייה</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    rows.forEach((r) => {
+      const avg = r.views ? r.totalSeconds / r.views : 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(ANALYTICS_LABELS[r.page] || r.page)}</td>
+        <td>${(r.views || 0).toLocaleString('he-IL')}</td>
+        <td>${formatDuration(r.totalSeconds)}</td>
+        <td>${formatDuration(avg)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+  }
+
   function initTabs() {
     const tabs = Array.from(document.querySelectorAll('.admin-tab'));
     const resetBtn = document.getElementById('admin-reset');
@@ -566,8 +639,9 @@
         document.querySelectorAll('.admin-panel').forEach((panel) => {
           panel.hidden = panel.dataset.adminPanel !== target;
         });
-        if (resetBtn) resetBtn.hidden = target === 'appointments';
+        if (resetBtn) resetBtn.hidden = (target === 'appointments' || target === 'analytics');
         if (target === 'appointments') renderAppointments();
+        if (target === 'analytics') renderAnalytics();
       });
     });
   }
@@ -584,6 +658,9 @@
     renderBlockedDates();
     initTabs();
 
+    const analyticsRefreshBtn = document.getElementById('admin-analytics-refresh');
+    if (analyticsRefreshBtn) analyticsRefreshBtn.addEventListener('click', renderAnalytics);
+
     document.getElementById('admin-hours-reset').addEventListener('click', async () => {
       if (!confirm('לשחזר את שעות הפעילות לברירת המחדל? התאריכים החסומים לא יימחקו.')) return;
       const prevBlocked = Array.isArray(hoursConfig.blockedDates) ? hoursConfig.blockedDates : [];
@@ -596,7 +673,7 @@
     document.getElementById('admin-reset').addEventListener('click', async () => {
       const activeTab = document.querySelector('.admin-tab.active');
       const target = activeTab ? activeTab.dataset.adminTab : 'stories';
-      if (target === 'appointments') return;
+      if (target === 'appointments' || target === 'analytics') return;
       const labels = { stories: 'הסטוריז', feed: 'הפיד', bride: 'קרוסלת "אני כלה"' };
       if (!confirm(`לאפס את ${labels[target]} לברירת המחדל? פעולה זו תמחק את כל העריכות שהועלו בדפדפן הזה בחלק הזה בלבד.`)) return;
       if (target === 'feed') {
