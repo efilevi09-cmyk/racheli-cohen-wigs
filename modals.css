@@ -209,9 +209,12 @@
 }
 .side-cta a {
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 64px; height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 96px; height: 96px;
   border-radius: 50%;
   background: var(--gradient);
   box-shadow: 0 16px 36px -14px rgba(0,0,0,.55), 0 3px 10px rgba(0,0,0,.2);
@@ -225,7 +228,7 @@
 /* מסגרת מקווקוות שמסתובבת סביב העיגול ברציפות */
 .side-cta-ring {
   position: absolute;
-  inset: -7px;
+  inset: -10px;
   border-radius: 50%;
   border: 2px dashed rgba(255,255,255,.6);
   pointer-events: none;
@@ -236,14 +239,14 @@
 }
 .side-cta-icon {
   flex-shrink: 0;
-  width: 40px; height: 40px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   background: rgba(255,255,255,.22);
   display: grid; place-items: center;
   animation: side-cta-nudge 4.5s ease-in-out infinite;
   transform-origin: 50% 55%;
 }
-.side-cta-icon svg { width: 19px; height: 19px; fill: none; stroke: var(--white); stroke-width: 2; }
+.side-cta-icon svg { width: 16px; height: 16px; fill: none; stroke: var(--white); stroke-width: 2; }
 /* "נדנוד" עדין ומחזורי לאייקון הלוח - תנועה קצרה וחוזרת, לא סיבוב רציף */
 @keyframes side-cta-nudge {
   0%, 58%, 100% { transform: rotate(0deg) scale(1); }
@@ -251,6 +254,14 @@
   71% { transform: rotate(9deg) scale(1.06); }
   78% { transform: rotate(-5deg) scale(1.02); }
   85% { transform: rotate(0deg) scale(1); }
+}
+.side-cta-label {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  white-space: pre-line;
 }
 @media (prefers-reduced-motion: reduce) {
   .side-cta-ring, .side-cta-icon { animation: none; }
@@ -261,10 +272,11 @@
   .story-card img { height: 230px; }
   .story-card.active { width: 230px; }
   .story-card.active img { height: 330px; }
-  .side-cta a { width: 56px; height: 56px; }
-  .side-cta-icon { width: 34px; height: 34px; }
-  .side-cta-icon svg { width: 16px; height: 16px; }
-  .side-cta-ring { inset: -6px; }
+  .side-cta a { width: 84px; height: 84px; }
+  .side-cta-icon { width: 30px; height: 30px; }
+  .side-cta-icon svg { width: 14px; height: 14px; }
+  .side-cta-label { font-size: 10px; }
+  .side-cta-ring { inset: -9px; }
 }
 
 /* ========================================================================

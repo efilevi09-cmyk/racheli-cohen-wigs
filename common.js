@@ -161,6 +161,7 @@
         <a href="#" data-open-modal="appointment" aria-label="קביעת פגישה">
           <span class="side-cta-ring" aria-hidden="true"></span>
           <span class="side-cta-icon">${svg('calendar')}</span>
+          <span class="side-cta-label">לקביעת<br>פגישה</span>
         </a>
       </div>`;
     const el = holder.firstElementChild;
