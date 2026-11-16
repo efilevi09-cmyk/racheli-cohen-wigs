@@ -222,10 +222,12 @@ export default {
       return json({ id: m[1], count: next }, 200, origin);
     }
 
-    /* ---- POST /api/analytics/pageview  (ציבורי - "פינג" קצר מכל טעינת עמוד באתר: באיזה עמוד
+    /* ---- POST /api/analytics/visit  (ציבורי - "פינג" קצר מכל טעינת עמוד באתר: באיזה עמוד
        ביקרו וכמה זמן (שניות) נשארו בו. נשלח מהדפדפן ברגע שעוזבים/מחליפים לשונית, לא בזמן אמת,
-       דרך navigator.sendBeacon - לכן אין כאן אימות הרשאה, בדיוק כמו /api/views למעלה) ---- */
-    if (path === '/api/analytics/pageview' && request.method === 'POST') {
+       דרך navigator.sendBeacon - לכן אין כאן אימות הרשאה, בדיוק כמו /api/views למעלה.
+       שימו לב: בכוונה *לא* בשם "pageview" בנתיב - חוסמי פרסומות (כמו uBlock) חוסמים כל כתובת
+       שמכילה את המילה הזו כברירת מחדל, מה שהיה גורם לכל מי שמתקין כזה תוסף לא להיספר כלל) ---- */
+    if (path === '/api/analytics/visit' && request.method === 'POST') {
       let body;
       try { body = await request.json(); } catch (e) { return json({ error: 'invalid json' }, 400, origin); }
       const { page, duration } = body || {};

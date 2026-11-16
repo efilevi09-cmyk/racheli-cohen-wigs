@@ -1001,11 +1001,11 @@
       if (navigator.sendBeacon) {
         try {
           const blob = new Blob([payload], { type: 'application/json' });
-          if (navigator.sendBeacon(RC_API_BASE + '/api/analytics/pageview', blob)) return;
+          if (navigator.sendBeacon(RC_API_BASE + '/api/analytics/visit', blob)) return;
         } catch (e) {}
       }
       try {
-        fetch(RC_API_BASE + '/api/analytics/pageview', {
+        fetch(RC_API_BASE + '/api/analytics/visit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: payload,
