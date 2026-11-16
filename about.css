@@ -12,7 +12,8 @@
 }
 .about-hero-bg {
   position: absolute; inset: 0;
-  background: url("assets/about_figma_hero.jpg") no-repeat center 22% / cover;
+  /* מיקום אנכי מדויק לפי יחס החיתוך בפיגמה - כך שכל הפנים נראות במרכז, בלי חיתוך בסנטר/בפה */
+  background: url("assets/about_figma_hero.jpg") no-repeat center 35% / cover;
 }
 .about-hero-bg::after {
   content: "";
@@ -87,6 +88,7 @@
    בדיוק כמו ברצועות ה-Rectangle החוזרות בעיצוב המקורי בפיגמה ---------- */
 .about-feed {
   position: relative;
+  z-index: 0;
   max-width: 1280px;
   margin: 70px auto 0;
   padding: 0 16px;
@@ -145,21 +147,82 @@
 }
 
 /* ---------- בלון הטקסט האורגני - מופיע פעם אחת, "צף" מעל קיר התמונות ---------- */
+/* בלון הטקסט - כתם אורגני אמיתי מהפיגמה (לא כרטיס לבן), מרחף עדינות ברקע מאחורי הכותרת */
 .about-blob-wrap {
   position: relative;
   z-index: 2;
   max-width: 560px;
   margin: 0 auto 100px;
-  padding: 44px 36px;
+  padding: 60px 36px;
   text-align: center;
-  background: var(--white);
-  box-shadow: var(--shadow-card);
-  border-radius: 46% 54% 62% 38% / 48% 42% 58% 52%;
+}
+.about-blob-wrap-bg {
+  position: absolute;
+  inset: -15% -22%;
+  background: url("assets/about_figma_blob_callout.svg") no-repeat center / 100% 100%;
+  transform: rotate(-11deg);
+  z-index: -1;
+  pointer-events: none;
+  animation: about-blob-sway 11s ease-in-out infinite;
 }
 .about-blob-wrap h2 {
   font-size: clamp(21px, 2.8vw, 27px);
   line-height: 1.4;
   text-wrap: balance;
+}
+
+/* ---------- כתמים אורגניים צפים מהפיגמה - "דברים שעפים באוויר" ---------- */
+.about-blob-bg {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  z-index: -1;
+}
+.about-blob-bg--top {
+  top: -40px; left: -14%;
+  width: min(1100px, 110%);
+  aspect-ratio: 1455 / 1652.93;
+  background: url("assets/about_figma_blob_top.svg") no-repeat center / contain;
+  animation: about-blob-sway 16s ease-in-out infinite;
+}
+/* עוטף נייח למרכוז אופקי; האנימציה עצמה יושבת על ילד פנימי, כדי לא להתנגש עם translateX */
+.about-blob-bg--bottom {
+  bottom: -60px; left: 50%;
+  width: min(980px, 115%);
+  aspect-ratio: 1302.66 / 1479.87;
+  transform: translateX(-50%);
+}
+.about-blob-bg--bottom-inner {
+  position: absolute; inset: 0;
+  background: url("assets/about_figma_blob_bottom.svg") no-repeat center / contain;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  animation: about-blob-sway 18s ease-in-out infinite reverse;
+}
+.about-blob-float {
+  position: absolute;
+  width: 92px;
+  aspect-ratio: 157.343 / 178.747;
+  background: url("assets/about_figma_blob_float.svg") no-repeat center / contain;
+  pointer-events: none;
+  z-index: 3;
+  animation: about-blob-drift 6.5s ease-in-out infinite;
+}
+.about-blob-float--hero { top: 40%; right: 9%; opacity: .85; }
+.about-blob-float--mid { top: -10px; left: 8%; animation-duration: 7.6s; animation-delay: -2.4s; }
+
+@keyframes about-blob-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(6deg); }
+}
+@keyframes about-blob-sway {
+  0%, 100% { transform: translateY(0) rotate(-11deg); }
+  50% { transform: translateY(-10px) rotate(-8deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-blob-float, .about-blob-bg--top, .about-blob-bg--bottom-inner, .about-blob-wrap-bg {
+    animation: none;
+  }
 }
 
 /* ---------- אפקט "כתיבה בגלילה" לכותרות ---------- */
@@ -176,6 +239,7 @@
 /* ---------- ציטוט ---------- */
 .about-quote {
   position: relative;
+  overflow: visible;
   z-index: 2;
   max-width: 560px;
   margin: 0 auto 100px;
@@ -215,6 +279,7 @@
 /* ---------- רצועת סיום - פורטרט עגול + "לאיזה מסע תרצי להצטרף" ---------- */
 .about-finale {
   position: relative;
+  z-index: 0;
   max-width: 640px;
   margin: 0 auto 90px;
   padding: 60px 24px 0;
@@ -257,5 +322,7 @@
 @media (max-width: 760px) {
   .about-stats { margin-top: -36px; gap: 10px; padding: 0 16px; }
   .about-stat { padding: 16px 8px; }
-  .about-blob-wrap { padding: 34px 24px; margin: 0 16px 70px; border-radius: 32px; }
+  .about-blob-wrap { padding: 44px 20px; margin: 0 16px 70px; }
+  .about-blob-float { width: 64px; }
+  .about-blob-bg--top, .about-blob-bg--bottom { display: none; }
 }
