@@ -200,26 +200,39 @@
 .story-progress { width: min(1100px,92%); height: 6px; background: #fff5ee; border-radius: 99px; margin: 40px auto 0; overflow: hidden; }
 .story-progress-bar { height: 100%; background: var(--gradient); border-radius: 99px; transition: width .3s ease; }
 
+/* כפתור "קבעי פגישה" - עיגול צף, קבוע בפינה שמאלית-תחתונה לאורך כל הגלילה בכל עמודי האתר */
 .side-cta {
-  position: fixed; top: 50%; left: 0;
-  transform: translateY(-50%);
+  position: fixed;
+  bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+  left: max(22px, calc(env(safe-area-inset-left, 0px) + 14px));
   z-index: 30;
 }
-/* כרית אייקון עגולה + תווית אופקית רחבה, צמודות לקצה המסך (שמאל) עם קצה ישר, והקצה הפנימי מעוגל לגמרי */
 .side-cta a {
-  display: flex; align-items: center; gap: 13px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
   background: var(--gradient);
-  color: var(--white); font-weight: 700; font-size: 17px; white-space: nowrap;
-  padding: 16px 34px 16px 14px;
-  border-radius: 0 999px 999px 0;
   box-shadow: 0 16px 36px -14px rgba(0,0,0,.55), 0 3px 10px rgba(0,0,0,.2);
-  transition: transform .3s cubic-bezier(.22,.8,.3,1), box-shadow .3s ease, padding .3s ease;
+  transition: transform .3s cubic-bezier(.22,.8,.3,1), box-shadow .3s ease;
 }
 .side-cta a:hover,
 .side-cta a:focus-visible {
-  transform: translateX(4px);
+  transform: scale(1.07);
   box-shadow: 0 20px 44px -12px rgba(0,0,0,.6), 0 3px 10px rgba(0,0,0,.22);
-  padding-left: 40px;
+}
+/* מסגרת מקווקוות שמסתובבת סביב העיגול ברציפות */
+.side-cta-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,.6);
+  pointer-events: none;
+  animation: side-cta-spin 9s linear infinite;
+}
+@keyframes side-cta-spin {
+  to { transform: rotate(360deg); }
 }
 .side-cta-icon {
   flex-shrink: 0;
@@ -227,17 +240,31 @@
   border-radius: 50%;
   background: rgba(255,255,255,.22);
   display: grid; place-items: center;
+  animation: side-cta-nudge 4.5s ease-in-out infinite;
+  transform-origin: 50% 55%;
 }
 .side-cta-icon svg { width: 19px; height: 19px; fill: none; stroke: var(--white); stroke-width: 2; }
-.side-cta-label { padding-top: 1px; }
+/* "נדנוד" עדין ומחזורי לאייקון הלוח - תנועה קצרה וחוזרת, לא סיבוב רציף */
+@keyframes side-cta-nudge {
+  0%, 58%, 100% { transform: rotate(0deg) scale(1); }
+  64% { transform: rotate(-12deg) scale(1.06); }
+  71% { transform: rotate(9deg) scale(1.06); }
+  78% { transform: rotate(-5deg) scale(1.02); }
+  85% { transform: rotate(0deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-cta-ring, .side-cta-icon { animation: none; }
+}
 
 @media (max-width: 860px) {
   .story-card { width: 160px; }
   .story-card img { height: 230px; }
   .story-card.active { width: 230px; }
   .story-card.active img { height: 330px; }
-  .side-cta { position: static; transform: none; width: 100%; margin: 24px 0; }
-  .side-cta a { width: 100%; justify-content: center; border-radius: var(--radius-pill); padding: 15px 20px; }
+  .side-cta a { width: 56px; height: 56px; }
+  .side-cta-icon { width: 34px; height: 34px; }
+  .side-cta-icon svg { width: 16px; height: 16px; }
+  .side-cta-ring { inset: -6px; }
 }
 
 /* ========================================================================

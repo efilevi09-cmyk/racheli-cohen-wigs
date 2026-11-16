@@ -159,8 +159,8 @@
     holder.innerHTML = `
       <div class="side-cta" id="site-side-cta">
         <a href="#" data-open-modal="appointment" aria-label="קביעת פגישה">
+          <span class="side-cta-ring" aria-hidden="true"></span>
           <span class="side-cta-icon">${svg('calendar')}</span>
-          <span class="side-cta-label">קבעי פגישה</span>
         </a>
       </div>`;
     const el = holder.firstElementChild;
