@@ -156,6 +156,20 @@
 .admin-check-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--black); cursor: pointer; }
 .admin-check-label input { accent-color: var(--rose-1); width: 15px; height: 15px; }
 
+/* ---------------- ניהול מאמרים (עולם תוכן) ---------------- */
+.admin-text-input {
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  font-family: var(--font-ui); font-size: 13.5px; color: var(--black);
+}
+.admin-text-input:focus { outline: none; border-color: var(--rose-1); }
+.admin-article-title-input { flex: 1 1 220px; font-weight: 700; }
+.admin-article-tag-input { width: 150px; }
+.admin-article-body-input { min-height: 160px; }
+.admin-article-noimg {
+  width: 100%; height: 100%; display: grid; place-items: center;
+  color: var(--gray-text); font-size: 11px; text-align: center; background: #eee;
+}
+
 /* ---------------- לוז פגישות: שעות פעילות, תאריכים חסומים, רשימת פגישות ---------------- */
 .admin-hours-row {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;

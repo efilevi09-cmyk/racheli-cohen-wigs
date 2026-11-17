@@ -1,8 +1,11 @@
-// פאנל ניהול תוכן - רחלי כהן (סטוריז + פיד + קרוסלת "אני כלה")
+// פאנל ניהול תוכן - רחלי כהן (סטוריז + פיד + קרוסלות "אני כלה"/"פאה חדשה"/"חידוש פאה" + מאמרים)
 (function () {
   let topics = [];
   let feedPosts = [];
   let brideSlides = [];
+  let newWigSlides = [];
+  let renewWigSlides = [];
+  let articles = [];
   const objectUrls = [];
 
   function trackUrl(url) { objectUrls.push(url); return url; }
@@ -228,12 +231,19 @@
   }
   const persistFeedDebounced = debounce(() => persistFlat('feed', feedPosts), 500);
   const persistBrideDebounced = debounce(() => persistFlat('bride_journey', brideSlides), 500);
+  const persistNewWigDebounced = debounce(() => persistFlat('new_wig_journey', newWigSlides), 500);
+  const persistRenewWigDebounced = debounce(() => persistFlat('renew_wig_journey', renewWigSlides), 500);
 
-  /* kind: { key, list, persist, persistDebounced, containerId, isBride } */
+  /* kind: { key, list, persist, persistDebounced, containerId, isBride }
+     isBride=true מסמן "קרוסלת סטורי" (מדיה+כיתוב, עם אפשרות showStats/active) - משותף לשלוש הקרוסלות */
   function flatKind(name) {
-    return name === 'feed'
-      ? { key: 'feed', list: feedPosts, persist: () => persistFlat('feed', feedPosts), persistDebounced: persistFeedDebounced, containerId: 'admin-feed', isBride: false }
-      : { key: 'bride_journey', list: brideSlides, persist: () => persistFlat('bride_journey', brideSlides), persistDebounced: persistBrideDebounced, containerId: 'admin-bride', isBride: true };
+    const kinds = {
+      feed: { key: 'feed', list: feedPosts, persist: () => persistFlat('feed', feedPosts), persistDebounced: persistFeedDebounced, containerId: 'admin-feed', isBride: false },
+      bride: { key: 'bride_journey', list: brideSlides, persist: () => persistFlat('bride_journey', brideSlides), persistDebounced: persistBrideDebounced, containerId: 'admin-bride', isBride: true },
+      'new-wig': { key: 'new_wig_journey', list: newWigSlides, persist: () => persistFlat('new_wig_journey', newWigSlides), persistDebounced: persistNewWigDebounced, containerId: 'admin-new-wig', isBride: true },
+      'renew-wig': { key: 'renew_wig_journey', list: renewWigSlides, persist: () => persistFlat('renew_wig_journey', renewWigSlides), persistDebounced: persistRenewWigDebounced, containerId: 'admin-renew-wig', isBride: true },
+    };
+    return kinds[name] || kinds.bride;
   }
 
   async function renderFlatAll(name) {
@@ -385,6 +395,166 @@
       k.list.splice(idx, 1);
       await k.persist();
       await renderFlatAll(name);
+    });
+    actions.appendChild(delBtn);
+    fields.appendChild(actions);
+
+    row.appendChild(fields);
+    return row;
+  }
+
+  /* ==========================================================================
+     ניהול מאמרים (דף "מאמרים" + עמוד מאמר בודד) - כל מאמר: תמונה, קטגוריה, כותרת,
+     תקציר, גוף (פסקאות מופרדות בשורה ריקה; שורה שמתחילה ב-"## " הופכת לכותרת משנה)
+     ========================================================================== */
+  async function persistArticles() { return persistFlat('articles', articles); }
+  const persistArticlesDebounced = debounce(persistArticles, 500);
+
+  async function articleImgSrc(item) {
+    if (item.mediaId) {
+      const blob = await window.RacheliStore.getMedia(item.mediaId);
+      if (blob) return trackUrl(URL.createObjectURL(blob));
+    }
+    return item.img || '';
+  }
+
+  /* הופך מערך פסקאות (כפי שהוא נשמר ומוצג באתר - ר' renderArticleBody ב-common.js) לטקסט חופשי
+     לעריכה בתיבת טקסט אחת, ולהפך - כדי לשמור על פורמט האחסון הקיים בלי לשנות את קוד התצוגה */
+  function articleBodyToText(body) {
+    return (Array.isArray(body) ? body : []).map((p) => {
+      const m = /^<h2>([\s\S]*)<\/h2>$/.exec(p);
+      return m ? '## ' + m[1] : p;
+    }).join('\n\n');
+  }
+  function textToArticleBody(text) {
+    return String(text || '').split(/\n\s*\n+/).map((b) => b.trim()).filter(Boolean).map((b) => (
+      b.indexOf('## ') === 0 ? `<h2>${escapeHtml(b.slice(3).trim())}</h2>` : b
+    ));
+  }
+
+  async function renderArticlesAdmin() {
+    const wrap = document.getElementById('admin-articles');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const list = document.createElement('div');
+    list.className = 'admin-flat-list';
+    for (let i = 0; i < articles.length; i++) list.appendChild(await renderArticleItem(i));
+    wrap.appendChild(list);
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'admin-add-slide';
+    addBtn.textContent = '+ הוספת מאמר';
+    addBtn.addEventListener('click', async () => {
+      articles.push({ id: 'article-' + Date.now(), tag: 'טיפים', img: '', title: 'כותרת חדשה', excerpt: '', likes: 0, body: [''] });
+      await persistArticles();
+      await renderArticlesAdmin();
+    });
+    wrap.appendChild(addBtn);
+  }
+
+  async function renderArticleItem(idx) {
+    const item = articles[idx];
+    const row = document.createElement('div');
+    row.className = 'admin-flat-item';
+
+    const reorder = document.createElement('div');
+    reorder.className = 'admin-flat-reorder';
+    const upBtn = document.createElement('button');
+    upBtn.type = 'button'; upBtn.textContent = '▲'; upBtn.title = 'הזזה למעלה'; upBtn.disabled = idx === 0;
+    upBtn.addEventListener('click', async () => {
+      [articles[idx - 1], articles[idx]] = [articles[idx], articles[idx - 1]];
+      await persistArticles();
+      await renderArticlesAdmin();
+    });
+    const downBtn = document.createElement('button');
+    downBtn.type = 'button'; downBtn.textContent = '▼'; downBtn.title = 'הזזה למטה'; downBtn.disabled = idx === articles.length - 1;
+    downBtn.addEventListener('click', async () => {
+      [articles[idx + 1], articles[idx]] = [articles[idx], articles[idx + 1]];
+      await persistArticles();
+      await renderArticlesAdmin();
+    });
+    reorder.appendChild(upBtn);
+    reorder.appendChild(downBtn);
+    row.appendChild(reorder);
+
+    const media = document.createElement('div');
+    media.className = 'admin-slide-media';
+    const src = await articleImgSrc(item);
+    media.innerHTML = src
+      ? `<img src="${src}" alt="">`
+      : `<div class="admin-article-noimg">אין תמונה</div>`;
+    row.appendChild(media);
+
+    const fields = document.createElement('div');
+    fields.className = 'admin-flat-fields';
+
+    const row1 = document.createElement('div');
+    row1.className = 'admin-flat-row';
+    row1.innerHTML = `
+      <input type="text" class="admin-text-input admin-article-title-input" placeholder="כותרת המאמר" value="${escapeAttr(item.title)}">
+      <input type="text" class="admin-text-input admin-article-tag-input" placeholder="קטגוריה (למשל: טיפים)" value="${escapeAttr(item.tag)}">
+    `;
+    const titleInput = row1.querySelector('.admin-article-title-input');
+    const tagInput = row1.querySelector('.admin-article-tag-input');
+    titleInput.addEventListener('input', () => { item.title = titleInput.value; persistArticlesDebounced(); });
+    tagInput.addEventListener('input', () => { item.tag = tagInput.value; persistArticlesDebounced(); });
+    fields.appendChild(row1);
+
+    const excerpt = document.createElement('textarea');
+    excerpt.className = 'admin-slide-caption';
+    excerpt.placeholder = 'תקציר קצר שמופיע בכרטיס...';
+    excerpt.value = item.excerpt || '';
+    excerpt.addEventListener('input', () => { item.excerpt = excerpt.value; persistArticlesDebounced(); });
+    fields.appendChild(excerpt);
+
+    const body = document.createElement('textarea');
+    body.className = 'admin-slide-caption admin-article-body-input';
+    body.placeholder = 'גוף המאמר - כל פסקה בשורה נפרדת עם שורה ריקה ביניהן. כדי להוסיף כותרת משנה בתוך המאמר, התחילי שורה ב-"## " (לדוגמה: ## איך לבחור פאה)';
+    body.value = articleBodyToText(item.body);
+    body.addEventListener('input', () => { item.body = textToArticleBody(body.value); persistArticlesDebounced(); });
+    fields.appendChild(body);
+
+    const row2 = document.createElement('div');
+    row2.className = 'admin-flat-row';
+    row2.innerHTML = `<label class="admin-check-label">לייקים (מספר לתצוגה): <input type="number" class="admin-num-input" min="0" value="${Number(item.likes) || 0}"></label>`;
+    const likesInput = row2.querySelector('input');
+    likesInput.addEventListener('input', () => { item.likes = Number(likesInput.value) || 0; persistArticlesDebounced(); });
+    fields.appendChild(row2);
+
+    const actions = document.createElement('div');
+    actions.className = 'admin-slide-actions';
+    const replaceLabel = document.createElement('label');
+    replaceLabel.className = 'admin-file-label';
+    replaceLabel.innerHTML = `${(item.mediaId || item.img) ? 'החלפת תמונה' : 'העלאת תמונה'} <input type="file" accept="image/*">`;
+    replaceLabel.querySelector('input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const warnBig = file.size > 50 * 1024 * 1024;
+      if (warnBig && !confirm('הקובץ גדול (מעל 50MB) - זה עלול להאט את הדפדפן. להמשיך בכל זאת?')) return;
+      if (item.mediaId) { try { await window.RacheliStore.deleteMedia(item.mediaId); } catch (e2) {} }
+      const id = 'article-' + Date.now();
+      await window.RacheliStore.putMedia(id, file);
+      item.mediaId = id;
+      delete item.img;
+      await persistArticles();
+      await renderArticlesAdmin();
+    });
+    actions.appendChild(replaceLabel);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'admin-slide-delete';
+    delBtn.textContent = 'מחיקת מאמר';
+    delBtn.disabled = articles.length <= 1;
+    delBtn.title = delBtn.disabled ? 'חייב להישאר מאמר אחד לפחות' : '';
+    delBtn.addEventListener('click', async () => {
+      if (articles.length <= 1) return;
+      if (!confirm('למחוק את המאמר הזה?')) return;
+      if (item.mediaId) { try { await window.RacheliStore.deleteMedia(item.mediaId); } catch (e2) {} }
+      articles.splice(idx, 1);
+      await persistArticles();
+      await renderArticlesAdmin();
     });
     actions.appendChild(delBtn);
     fields.appendChild(actions);
@@ -773,6 +943,12 @@
     await renderFlatAll('feed');
     brideSlides = await loadFlat('bride_journey', window.RacheliStore.DEFAULT_BRIDE_JOURNEY);
     await renderFlatAll('bride');
+    newWigSlides = await loadFlat('new_wig_journey', window.RacheliStore.DEFAULT_NEW_WIG_JOURNEY);
+    await renderFlatAll('new-wig');
+    renewWigSlides = await loadFlat('renew_wig_journey', window.RacheliStore.DEFAULT_RENEW_WIG_JOURNEY);
+    await renderFlatAll('renew-wig');
+    articles = await loadFlat('articles', window.RacheliStore.DEFAULT_ARTICLES);
+    await renderArticlesAdmin();
     await loadHours();
     renderHours();
     renderBlockedDates();
@@ -798,7 +974,10 @@
       const activeTab = document.querySelector('.admin-tab.active');
       const target = activeTab ? activeTab.dataset.adminTab : 'stories';
       if (target === 'appointments' || target === 'analytics') return;
-      const labels = { stories: 'הסטוריז', feed: 'הפיד', bride: 'קרוסלת "אני כלה"' };
+      const labels = {
+        stories: 'הסטוריז', feed: 'הפיד', bride: 'קרוסלת "אני כלה"',
+        'new-wig': 'קרוסלת "פאה חדשה"', 'renew-wig': 'קרוסלת "חידוש פאה"', articles: 'המאמרים',
+      };
       if (!confirm(`לאפס את ${labels[target]} לברירת המחדל? פעולה זו תמחק את כל העריכות שהועלו בדפדפן הזה בחלק הזה בלבד.`)) return;
       if (target === 'feed') {
         feedPosts = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_FEED_POSTS));
@@ -806,6 +985,15 @@
       } else if (target === 'bride') {
         brideSlides = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_BRIDE_JOURNEY));
         await persistFlat('bride_journey', brideSlides);
+      } else if (target === 'new-wig') {
+        newWigSlides = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_NEW_WIG_JOURNEY));
+        await persistFlat('new_wig_journey', newWigSlides);
+      } else if (target === 'renew-wig') {
+        renewWigSlides = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_RENEW_WIG_JOURNEY));
+        await persistFlat('renew_wig_journey', renewWigSlides);
+      } else if (target === 'articles') {
+        articles = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_ARTICLES));
+        await persistFlat('articles', articles);
       } else {
         topics = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_TOPICS));
         await persist();

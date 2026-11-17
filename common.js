@@ -758,6 +758,9 @@
     initHeroCollage: initHeroCollage,
     renderFeedList: function () { renderFeedList(); },
     renderBrideJourney: function () { renderBrideJourney(); },
+    renderNewWigJourney: function () { renderNewWigJourney(); },
+    renderRenewWigJourney: function () { renderRenewWigJourney(); },
+    refreshArticlesGrid: function () { refreshArticlesGrid(); },
   };
   window.addEventListener('DOMContentLoaded', function () {
     window.RacheliCommon.slideDisplaySrc = slideDisplaySrc;
@@ -820,6 +823,26 @@
     { id: 'bride-j-5', type: 'image', src: 'assets/journey_side.jpg', caption: 'אותה השראה. שתי פאות שונות.' },
   ];
   let BRIDE_JOURNEY = DEFAULT_BRIDE_JOURNEY;
+
+  /* ---------------- קרוסלת "פאה חדשה" - ניתנת לניהול דרך האדמין (אותו מבנה בדיוק כמו "אני כלה") ---------------- */
+  const DEFAULT_NEW_WIG_JOURNEY = [
+    { id: 'new-wig-j-1', type: 'image', src: 'assets/journey_side.jpg', caption: 'נושא?' },
+    { id: 'new-wig-j-2', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה אני רואה בפאה שאת בכלל לא חושבת לבדוק?' },
+    { id: 'new-wig-j-3', type: 'image', src: 'assets/journey_center.jpg', showStats: true, likeId: 'new-wig-story-1', views: 220, active: true },
+    { id: 'new-wig-j-4', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה הפאה הקודמת שלך יכולה לספר לי על הפאה הבאה שלך?' },
+    { id: 'new-wig-j-5', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה הפאה הקודמת שלך יכולה לספר לי על הפאה הבאה שלך?' },
+  ];
+  let NEW_WIG_JOURNEY = DEFAULT_NEW_WIG_JOURNEY;
+
+  /* ---------------- קרוסלת "חידוש פאה" - ניתנת לניהול דרך האדמין (אותו מבנה בדיוק כמו "אני כלה") ---------------- */
+  const DEFAULT_RENEW_WIG_JOURNEY = [
+    { id: 'renew-wig-j-1', type: 'image', src: 'assets/journey_side.jpg', caption: 'נושא?' },
+    { id: 'renew-wig-j-2', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה אני רואה בפאה שאת בכלל לא חושבת לבדוק?' },
+    { id: 'renew-wig-j-3', type: 'image', src: 'assets/journey_center.jpg', showStats: true, likeId: 'renew-wig-story-1', views: 220, active: true },
+    { id: 'renew-wig-j-4', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה הפאה הקודמת שלך יכולה לספר לי על הפאה הבאה שלך?' },
+    { id: 'renew-wig-j-5', type: 'image', src: 'assets/journey_side.jpg', caption: 'מה הפאה הקודמת שלך יכולה לספר לי על הפאה הבאה שלך?' },
+  ];
+  let RENEW_WIG_JOURNEY = DEFAULT_RENEW_WIG_JOURNEY;
 
   /* ---------------- לוז פגישות: שעות פעילות ברירת מחדל (בשימוש גם באדמין וגם בטופס קביעת הפגישה) ----------------
      days: 0=ראשון ... 6=שבת (תואם ל-Date.prototype.getDay()) */
@@ -1037,6 +1060,7 @@
       getViews, incrementView, sendPageview, getAnalytics,
       computeDaySlots, timeToMinutes,
       DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY, DEFAULT_HOURS,
+      DEFAULT_NEW_WIG_JOURNEY, DEFAULT_RENEW_WIG_JOURNEY, DEFAULT_ARTICLES,
     };
   })();
   window.RacheliStore = RCStore;
@@ -1311,6 +1335,106 @@
     BRIDE_JOURNEY = DEFAULT_BRIDE_JOURNEY;
   }
 
+  let newWigUnsub = null;
+  async function loadNewWigJourney() {
+    if (window.RC_SPA) {
+      try {
+        await RCCloud.init();
+        const db = RCCloud.getDb();
+        if (db) {
+          await RCCloud.seedCollectionIfEmpty('new_wig_journey', DEFAULT_NEW_WIG_JOURNEY);
+          const cloudList = await RCCloud.fetchCollection('new_wig_journey');
+          NEW_WIG_JOURNEY = (cloudList && cloudList.length) ? cloudList : DEFAULT_NEW_WIG_JOURNEY;
+          if (newWigUnsub) newWigUnsub();
+          newWigUnsub = RCCloud.subscribeCollection('new_wig_journey', function (list) {
+            if (list && list.length) { NEW_WIG_JOURNEY = list; renderNewWigJourney(); }
+          });
+          return;
+        }
+      } catch (e) {}
+      NEW_WIG_JOURNEY = DEFAULT_NEW_WIG_JOURNEY;
+      return;
+    }
+    try {
+      const stored = await RCStore.getContent('new_wig_journey');
+      if (stored && Array.isArray(stored) && stored.length) {
+        NEW_WIG_JOURNEY = await hydrateMediaList(stored);
+        return;
+      }
+    } catch (e) {}
+    NEW_WIG_JOURNEY = DEFAULT_NEW_WIG_JOURNEY;
+  }
+
+  let renewWigUnsub = null;
+  async function loadRenewWigJourney() {
+    if (window.RC_SPA) {
+      try {
+        await RCCloud.init();
+        const db = RCCloud.getDb();
+        if (db) {
+          await RCCloud.seedCollectionIfEmpty('renew_wig_journey', DEFAULT_RENEW_WIG_JOURNEY);
+          const cloudList = await RCCloud.fetchCollection('renew_wig_journey');
+          RENEW_WIG_JOURNEY = (cloudList && cloudList.length) ? cloudList : DEFAULT_RENEW_WIG_JOURNEY;
+          if (renewWigUnsub) renewWigUnsub();
+          renewWigUnsub = RCCloud.subscribeCollection('renew_wig_journey', function (list) {
+            if (list && list.length) { RENEW_WIG_JOURNEY = list; renderRenewWigJourney(); }
+          });
+          return;
+        }
+      } catch (e) {}
+      RENEW_WIG_JOURNEY = DEFAULT_RENEW_WIG_JOURNEY;
+      return;
+    }
+    try {
+      const stored = await RCStore.getContent('renew_wig_journey');
+      if (stored && Array.isArray(stored) && stored.length) {
+        RENEW_WIG_JOURNEY = await hydrateMediaList(stored);
+        return;
+      }
+    } catch (e) {}
+    RENEW_WIG_JOURNEY = DEFAULT_RENEW_WIG_JOURNEY;
+  }
+
+  let articlesUnsub = null;
+  async function hydrateArticleMedia(list) {
+    const clone = JSON.parse(JSON.stringify(list));
+    for (const item of clone) {
+      if (item.mediaId) {
+        const blob = await RCStore.getMedia(item.mediaId);
+        if (blob) item.img = URL.createObjectURL(blob);
+      }
+    }
+    return clone;
+  }
+  async function loadArticles() {
+    if (window.RC_SPA) {
+      try {
+        await RCCloud.init();
+        const db = RCCloud.getDb();
+        if (db) {
+          await RCCloud.seedCollectionIfEmpty('articles', DEFAULT_ARTICLES);
+          const cloudList = await RCCloud.fetchCollection('articles');
+          ARTICLES = (cloudList && cloudList.length) ? cloudList : DEFAULT_ARTICLES;
+          if (articlesUnsub) articlesUnsub();
+          articlesUnsub = RCCloud.subscribeCollection('articles', function (list) {
+            if (list && list.length) { ARTICLES = list; refreshArticlesGrid(); }
+          });
+          return;
+        }
+      } catch (e) {}
+      ARTICLES = DEFAULT_ARTICLES;
+      return;
+    }
+    try {
+      const stored = await RCStore.getContent('articles');
+      if (stored && Array.isArray(stored) && stored.length) {
+        ARTICLES = await hydrateArticleMedia(stored);
+        return;
+      }
+    } catch (e) {}
+    ARTICLES = DEFAULT_ARTICLES;
+  }
+
   function mediaItemSrc(item) {
     if (!item) return '';
     if (item.src) return item.src;
@@ -1464,12 +1588,14 @@
 
   /* בונה את כרטיסי קרוסלת "אני כלה" מתוך BRIDE_JOURNEY - מריץ מחדש בכל טעינת תוכן, ואז מפעיל/מרענן
      מחדש את לוגיקת הקרוסלה (journey.js) כדי שתזהה את הכרטיסים החדשים */
-  function renderBrideJourney() {
-    const wrap = document.getElementById('story-cards-bride');
+  /* רינדור גנרי לקרוסלות "סטורי" מבוססות-תוכן (אני כלה / פאה חדשה / חידוש פאה) - אותו מבנה כרטיס
+     בדיוק בכל שלוש, ההבדל היחיד הוא מאיזו רשימה ולאיזה קונטיינר */
+  function renderJourneyCards(list, containerId) {
+    const wrap = document.getElementById(containerId);
     if (!wrap) return;
     wrap.innerHTML = '';
     let activeSet = false;
-    BRIDE_JOURNEY.forEach((slide) => {
+    list.forEach((slide) => {
       const card = document.createElement('div');
       card.className = 'story-card' + (slide.active ? ' active' : '');
       if (slide.active) activeSet = true;
@@ -1496,6 +1622,9 @@
     if (window.RCJourney && window.RCJourney.init) window.RCJourney.init();
     refreshViewCounts(wrap);
   }
+  function renderBrideJourney() { renderJourneyCards(BRIDE_JOURNEY, 'story-cards-bride'); }
+  function renderNewWigJourney() { renderJourneyCards(NEW_WIG_JOURNEY, 'story-cards-new-wig'); }
+  function renderRenewWigJourney() { renderJourneyCards(RENEW_WIG_JOURNEY, 'story-cards-renew-wig'); }
 
   function escapeAttrC(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
@@ -1672,7 +1801,7 @@
     els.forEach((el) => io.observe(el));
   }
 
-  const ARTICLES = [
+  const DEFAULT_ARTICLES = [
     { id: 'mistakes-first-wig', tag: 'טיפים', img: 'assets/articles_card_00.jpg', title: '3 טעויות נפוצות בבחירת הפאה הראשונה', excerpt: 'דברים קטנים שעושים הבדל גדול בתוצאה', likes: 128, body: [
       'הרגע שבו בוחרות פאה בפעם הראשונה הוא רגע גדול - ולא פלא שהוא גם מלא בהתלבטויות. רוב הטעויות שאני רואה שוב ושוב לא קשורות לטעם רע או לבחירה "לא נכונה", אלא לכמה הרגלים שקל מאוד לתקן ברגע שמכירים אותם.',
       '<h2>1. לבחור לפי תמונה, לא לפי מבנה הפנים</h2>',
@@ -1734,6 +1863,11 @@
       'שגרה פשוטה כזו, חמש דקות ביום, שומרת על הפאה נראית בדיוק כמו ביום שקנית אותה.',
     ] },
   ];
+  /* ARTICLES ניתנת לניהול דרך האדמין (ר' loadArticles למעלה) - DEFAULT_ARTICLES משמשת כברירת מחדל
+     וכנקודת איפוס, בדיוק כמו DEFAULT_FEED_POSTS/DEFAULT_BRIDE_JOURNEY */
+  let ARTICLES = DEFAULT_ARTICLES;
+  let articlesActiveFilter = 'my-feed';
+  function refreshArticlesGrid() { renderArticlesGrid(articlesActiveFilter); }
 
   function renderArticlesGrid(filter) {
     const grid = document.getElementById('articles-grid');
@@ -1799,10 +1933,11 @@
       btn.addEventListener('click', () => {
         tabs.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
-        renderArticlesGrid(btn.getAttribute('data-filter'));
+        articlesActiveFilter = btn.getAttribute('data-filter');
+        renderArticlesGrid(articlesActiveFilter);
       });
     });
-    renderArticlesGrid('my-feed');
+    renderArticlesGrid(articlesActiveFilter);
   }
 
   /* ---------------- דף מאמר יחיד (article.html?id=...) ---------------- */
@@ -2418,17 +2553,23 @@
     mountFooter();
     mountModals();
     mountSideCta();
-    /* רינדור ראשוני סינכרוני עם ברירות המחדל - כדי שהפיד/קרוסלת "אני כלה" יופיעו מיד, בלי הבהוב ריק,
-       עד שהתוכן האמיתי (מקומי/ענן) ייטען ויחליף אותן אם שונה */
+    /* רינדור ראשוני סינכרוני עם ברירות המחדל - כדי שהפיד/קרוסלות "אני כלה"/"פאה חדשה"/"חידוש פאה"
+       יופיעו מיד, בלי הבהוב ריק, עד שהתוכן האמיתי (מקומי/ענן) ייטען ויחליף אותן אם שונה */
     renderFeedList();
     renderBrideJourney();
+    renderNewWigJourney();
+    renderRenewWigJourney();
     await loadTopics();
     mountStoryViewer();
     applyRingSegments();
     renderLikedVideosGrid();
-    await Promise.all([loadFeed(), loadBrideJourney()]);
+    await Promise.all([loadFeed(), loadBrideJourney(), loadNewWigJourney(), loadRenewWigJourney(), loadArticles()]);
     renderFeedList();
     renderBrideJourney();
+    renderNewWigJourney();
+    renderRenewWigJourney();
+    refreshArticlesGrid();
+    initArticlePage();
     initHeadingEffects();
     initMiscLikeButtons();
     initRevealAnimations();
