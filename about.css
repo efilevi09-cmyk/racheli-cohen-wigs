@@ -258,9 +258,8 @@
 
 .about-wall-diagonal {
   position: relative;
-  width: 100vw;
-  margin-inline-start: 50%;
-  transform: translateX(-50%);
+  width: calc(100% + 32px);
+  margin-inline: -16px;
   overflow: hidden;
   padding: 58px 0 74px;
   margin-bottom: 56px;
