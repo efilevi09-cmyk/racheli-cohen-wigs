@@ -189,6 +189,30 @@
 }
 .admin-blocked-add { display: flex; align-items: center; gap: 10px; }
 
+/* ==========================================================================
+   חסימת שעות נקודתיות בתאריך ספציפי - בחירת תאריך + רשת כפתורי שעה שמסמנים
+   חסום/פנוי, וסיכום של כל התאריכים עם חסימות חלקיות
+   ========================================================================== */
+.admin-blocked-hours-slots { margin-top: 12px; }
+.admin-hour-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-hour-chip {
+  border: 1px solid var(--line); border-radius: 8px; background: var(--white);
+  padding: 7px 14px; font-family: var(--font-ui); font-size: 13px; color: var(--black);
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.admin-hour-chip:hover { border-color: var(--rose-1); }
+.admin-hour-chip.is-blocked {
+  background: var(--rose-1); border-color: var(--rose-1); color: var(--white);
+  text-decoration: line-through;
+}
+.admin-blocked-hours-summary { margin-top: 18px; }
+.admin-blocked-hours-summary-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+}
+.admin-blocked-hours-summary-row:last-child { border-bottom: none; }
+.admin-blocked-hours-summary-date { font-weight: 700; font-size: 13px; color: var(--black); white-space: nowrap; }
+
 .admin-appt-list { display: flex; flex-direction: column; gap: 10px; }
 .admin-appt-item {
   display: flex; gap: 14px; align-items: center; flex-wrap: wrap;

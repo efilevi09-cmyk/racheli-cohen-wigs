@@ -329,9 +329,12 @@
 
       const allSlots = computeDaySlots(dayConfig, hours.slotMinutes);
       const taken = window.RacheliStore ? await window.RacheliStore.getTakenSlots(dateVal) : [];
+      /* שעות ספציפיות שרחלי חסמה ידנית בתאריך הזה בלבד (למשל פגישה פרטית/חופשה חלקית ביום),
+         בלי לחסום את כל התאריך - ראו admin.js renderBlockedHours */
+      const blockedForDate = (hours.blockedSlots && hours.blockedSlots[dateVal]) || [];
       const isToday = dateVal === dateInput.min;
       const nowMinutes = today.getHours() * 60 + today.getMinutes();
-      const available = allSlots.filter((t) => !taken.includes(t) && !(isToday && timeToMinutes(t) <= nowMinutes));
+      const available = allSlots.filter((t) => !taken.includes(t) && !blockedForDate.includes(t) && !(isToday && timeToMinutes(t) <= nowMinutes));
 
       if (!available.length) {
         timeSelect.innerHTML = '<option value="">אין שעות פנויות בתאריך זה</option>';
@@ -833,6 +836,9 @@
       6: { open: false, from: '', to: '' },
     },
     blockedDates: [],
+    /* חסימת שעות נקודתיות: מפתח = תאריך (YYYY-MM-DD), ערך = מערך שעות חסומות באותו תאריך בלבד -
+       בשביל יום שבו רחלי צריכה לחסום רק חלק מהשעות (לא את כל היום) */
+    blockedSlots: {},
   };
   function timeToMinutes(t) {
     const [h, m] = String(t || '0:0').split(':').map(Number);
@@ -1029,6 +1035,7 @@
       getTopics, setTopics, putMedia, getMedia, deleteMedia, getContent, setContent,
       getHours, setHours, getTakenSlots, bookAppointment, listAppointments, cancelAppointment,
       getViews, incrementView, sendPageview, getAnalytics,
+      computeDaySlots, timeToMinutes,
       DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY, DEFAULT_HOURS,
     };
   })();

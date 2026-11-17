@@ -404,6 +404,7 @@
     hoursConfig = stored || JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_HOURS));
     if (!hoursConfig.days) hoursConfig.days = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_HOURS.days));
     if (!Array.isArray(hoursConfig.blockedDates)) hoursConfig.blockedDates = [];
+    if (!hoursConfig.blockedSlots || typeof hoursConfig.blockedSlots !== 'object') hoursConfig.blockedSlots = {};
     if (!hoursConfig.slotMinutes) hoursConfig.slotMinutes = 30;
   }
 
@@ -477,6 +478,7 @@
         hoursConfig.blockedDates = hoursConfig.blockedDates.filter((d) => d !== dateStr);
         await persistHours();
         renderBlockedDates();
+        renderBlockedHours();
       });
       list.appendChild(chip);
     });
@@ -500,6 +502,7 @@
         hoursConfig.blockedDates.push(val);
         await persistHours();
         renderBlockedDates();
+        renderBlockedHours();
       }
       input.value = '';
     });
@@ -511,6 +514,123 @@
     if (isNaN(d.getTime())) return dateStr;
     const pad = (n) => String(n).padStart(2, '0');
     return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+  }
+
+  /* ==========================================================================
+     חסימת שעות נקודתיות בתאריך ספציפי - בלי לחסום את כל היום (למשל: פגישה פרטית
+     באמצע יום רגיל). הבחירה מוצגת כרשימת כפתורי שעה לכל התאריך שנבחר, בהתאם לשעות
+     הפעילות של יום השבוע הזה; לחיצה על שעה הופכת אותה לחסומה/פנויה ונשמרת מיד.
+     ========================================================================== */
+  function renderBlockedHours() {
+    const wrap = document.getElementById('admin-blocked-hours');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    const pickerRow = document.createElement('div');
+    pickerRow.className = 'admin-blocked-add';
+    pickerRow.innerHTML = `<input type="date" class="admin-time-input" id="admin-blocked-hours-date-input">
+      <span class="admin-hours-closed">בחרי תאריך כדי לראות ולסמן את השעות של אותו יום</span>`;
+    wrap.appendChild(pickerRow);
+
+    const slotsWrap = document.createElement('div');
+    slotsWrap.className = 'admin-blocked-hours-slots';
+    wrap.appendChild(slotsWrap);
+
+    function renderSlotsForDate(dateVal) {
+      slotsWrap.innerHTML = '';
+      if (!dateVal) return;
+
+      const d = new Date(dateVal + 'T00:00:00');
+      const dayConfig = hoursConfig.days[d.getDay()];
+      if (hoursConfig.blockedDates.includes(dateVal)) {
+        slotsWrap.innerHTML = '<p class="admin-hours-closed">התאריך הזה חסום לגמרי (ראו "תאריכים חסומים" למעלה) - אין צורך לחסום שעות בנפרד.</p>';
+        return;
+      }
+      if (!dayConfig || !dayConfig.open) {
+        slotsWrap.innerHTML = '<p class="admin-hours-closed">ממילא אין קבלה ביום הזה לפי שעות הפעילות הרגילות.</p>';
+        return;
+      }
+
+      const allSlots = window.RacheliStore.computeDaySlots(dayConfig, hoursConfig.slotMinutes);
+      if (!allSlots.length) {
+        slotsWrap.innerHTML = '<p class="admin-hours-closed">אין שעות מוגדרות ליום הזה.</p>';
+        return;
+      }
+
+      const blockedForDate = hoursConfig.blockedSlots[dateVal] || [];
+      const grid = document.createElement('div');
+      grid.className = 'admin-hour-chip-grid';
+      allSlots.forEach((t) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isBlocked = blockedForDate.includes(t);
+        btn.className = 'admin-hour-chip' + (isBlocked ? ' is-blocked' : '');
+        btn.textContent = t;
+        btn.title = isBlocked ? 'חסומה - לחצי כדי לפתוח' : 'פנויה - לחצי כדי לחסום';
+        btn.addEventListener('click', async () => {
+          const current = hoursConfig.blockedSlots[dateVal] || [];
+          if (current.includes(t)) {
+            hoursConfig.blockedSlots[dateVal] = current.filter((x) => x !== t);
+            if (!hoursConfig.blockedSlots[dateVal].length) delete hoursConfig.blockedSlots[dateVal];
+          } else {
+            hoursConfig.blockedSlots[dateVal] = current.concat([t]).sort();
+          }
+          await persistHours();
+          renderSlotsForDate(dateVal);
+          renderBlockedHoursSummary();
+        });
+        grid.appendChild(btn);
+      });
+      slotsWrap.appendChild(grid);
+    }
+
+    const dateInput = pickerRow.querySelector('#admin-blocked-hours-date-input');
+    dateInput.addEventListener('change', () => renderSlotsForDate(dateInput.value));
+
+    const summaryWrap = document.createElement('div');
+    summaryWrap.className = 'admin-blocked-hours-summary';
+    wrap.appendChild(summaryWrap);
+
+    function renderBlockedHoursSummary() {
+      summaryWrap.innerHTML = '';
+      const dates = Object.keys(hoursConfig.blockedSlots).sort();
+      if (!dates.length) {
+        const empty = document.createElement('span');
+        empty.className = 'admin-hours-closed';
+        empty.textContent = 'אין כרגע שעות חסומות בתאריך ספציפי כלשהו.';
+        summaryWrap.appendChild(empty);
+        return;
+      }
+      const title = document.createElement('p');
+      title.className = 'admin-hours-closed';
+      title.style.marginBottom = '8px';
+      title.textContent = 'שעות חסומות נקודתית:';
+      summaryWrap.appendChild(title);
+      dates.forEach((dateStr) => {
+        const row = document.createElement('div');
+        row.className = 'admin-blocked-hours-summary-row';
+        const label = document.createElement('span');
+        label.className = 'admin-blocked-hours-summary-date';
+        label.textContent = formatAdminDate(dateStr) + ':';
+        row.appendChild(label);
+        (hoursConfig.blockedSlots[dateStr] || []).forEach((t) => {
+          const chip = document.createElement('span');
+          chip.className = 'admin-blocked-chip';
+          chip.innerHTML = `${t} <button type="button" title="פתיחת השעה">&times;</button>`;
+          chip.querySelector('button').addEventListener('click', async () => {
+            hoursConfig.blockedSlots[dateStr] = (hoursConfig.blockedSlots[dateStr] || []).filter((x) => x !== t);
+            if (!hoursConfig.blockedSlots[dateStr].length) delete hoursConfig.blockedSlots[dateStr];
+            await persistHours();
+            renderBlockedHoursSummary();
+            if (dateInput.value === dateStr) renderSlotsForDate(dateStr);
+          });
+          row.appendChild(chip);
+        });
+        summaryWrap.appendChild(row);
+      });
+    }
+
+    renderBlockedHoursSummary();
   }
 
   async function renderAppointments() {
@@ -656,18 +776,22 @@
     await loadHours();
     renderHours();
     renderBlockedDates();
+    renderBlockedHours();
     initTabs();
 
     const analyticsRefreshBtn = document.getElementById('admin-analytics-refresh');
     if (analyticsRefreshBtn) analyticsRefreshBtn.addEventListener('click', renderAnalytics);
 
     document.getElementById('admin-hours-reset').addEventListener('click', async () => {
-      if (!confirm('לשחזר את שעות הפעילות לברירת המחדל? התאריכים החסומים לא יימחקו.')) return;
+      if (!confirm('לשחזר את שעות הפעילות לברירת המחדל? התאריכים והשעות החסומות לא יימחקו.')) return;
       const prevBlocked = Array.isArray(hoursConfig.blockedDates) ? hoursConfig.blockedDates : [];
+      const prevBlockedSlots = hoursConfig.blockedSlots && typeof hoursConfig.blockedSlots === 'object' ? hoursConfig.blockedSlots : {};
       hoursConfig = JSON.parse(JSON.stringify(window.RacheliStore.DEFAULT_HOURS));
       hoursConfig.blockedDates = prevBlocked; /* התאריכים החסומים מנוהלים בנפרד ולא מתאפסים כאן */
+      hoursConfig.blockedSlots = prevBlockedSlots; /* וכך גם השעות החסומות הנקודתיות */
       await persistHours();
       renderHours();
+      renderBlockedHours();
     });
 
     document.getElementById('admin-reset').addEventListener('click', async () => {
