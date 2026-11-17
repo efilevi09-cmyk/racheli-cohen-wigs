@@ -1060,7 +1060,10 @@
       getViews, incrementView, sendPageview, getAnalytics,
       computeDaySlots, timeToMinutes,
       DEFAULT_TOPICS, DEFAULT_FEED_POSTS, DEFAULT_BRIDE_JOURNEY, DEFAULT_HOURS,
-      DEFAULT_NEW_WIG_JOURNEY, DEFAULT_RENEW_WIG_JOURNEY, DEFAULT_ARTICLES,
+      DEFAULT_NEW_WIG_JOURNEY, DEFAULT_RENEW_WIG_JOURNEY,
+      /* DEFAULT_ARTICLES מוגדרת בהמשך הקובץ (אחרי ה-IIFE הזה) - נגיש כ-getter כדי שהערך ייקרא
+         רק כשבאמת פונים אליו (לאחר שההגדרה שם כבר רצה), ולא ברגע בניית האובייקט הזה */
+      get DEFAULT_ARTICLES() { return DEFAULT_ARTICLES; },
     };
   })();
   window.RacheliStore = RCStore;
